@@ -1,0 +1,335 @@
+[
+  {
+    "id": "3a877ac8-99cc-4f3b-869f-4a478bfb7f89",
+    "title": "CPU",
+    "description": "",
+    "position": {
+      "h": 4,
+      "nextX": 6,
+      "nextY": 4,
+      "w": 6,
+      "x": 0,
+      "y": 0
+    },
+    "viz_type": "chart",
+    "viz_content": "select * except (rm,sm,metrics) from(\n  select _tp_time, array_join(raw:resourceMetrics[*]) as rm\n,(array_filter(x -> x:key = 'host.name' or x:key = 'instance', rm:resource.attributes[*])[1]):value.stringValue as instance,rm:scopeMetrics[*][1] as sm,\nreplace_regex(sm:scope.name,'.*scraper/(.*)','\\\\1') as scope_name\n,array_join(sm:metrics[*]) as metrics,metrics:description as metrics_desc\n,(metrics:gauge.dataPoints[*][1]):asDouble::double as metrics_value\nfrom o11y.otlp_metrics where scope_name='loadscraper' and metrics_desc='Average CPU Load over 1 minute.' settings seek_to='-1h'\n);",
+    "viz_config": {
+      "chartType": "line",
+      "config": {
+        "color": "instance",
+        "colors": [
+          "#ED64A6",
+          "#F0BE3E",
+          "#DA4B36",
+          "#9A1563",
+          "#FF4A71",
+          "#D12D50",
+          "#8934D9",
+          "#D53F8C",
+          "#F7775A",
+          "#8934D9"
+        ],
+        "dataLabel": false,
+        "fractionDigits": 2,
+        "gridlines": true,
+        "legend": true,
+        "lineStyle": "curve",
+        "points": false,
+        "showAll": false,
+        "unit": {
+          "position": "left",
+          "value": ""
+        },
+        "xAxis": "_tp_time",
+        "xFormat": "",
+        "xRange": "Infinity",
+        "xTitle": "",
+        "yAxis": "metrics_value",
+        "yRange": {
+          "max": null,
+          "min": null
+        },
+        "yTickLabel": {
+          "maxChar": 25
+        },
+        "yTitle": ""
+      }
+    }
+  },
+  {
+    "id": "ef20b4e2-f1ce-4ffd-8603-432c1ea3932e",
+    "title": "Memory Used",
+    "description": "",
+    "position": {
+      "h": 4,
+      "nextX": 12,
+      "nextY": 4,
+      "w": 6,
+      "x": 6,
+      "y": 0
+    },
+    "viz_type": "chart",
+    "viz_content": "select * except (rm,sm,metrics) from(\n  select _tp_time, array_join(raw:resourceMetrics[*]) as rm\n,(array_filter(x -> x:key = 'host.name' or x:key = 'instance', rm:resource.attributes[*])[1]):value.stringValue as instance,rm:scopeMetrics[*][1] as sm,\nreplace_regex(sm:scope.name,'.*scraper/(.*)','\\\\1') as scope_name\n,array_join(sm:metrics[*]) as metrics,metrics:description as metrics_desc\n,((metrics:sum.dataPoints[*][1]):asInt::uint32)/1024/1024/1024 as metrics_value\nfrom o11y.otlp_metrics where scope_name='memoryscraper' and metrics_desc='Bytes of memory in use.' settings seek_to='-1h'\n);",
+    "viz_config": {
+      "chartType": "line",
+      "config": {
+        "color": "instance",
+        "colors": [
+          "#ED64A6",
+          "#F0BE3E",
+          "#DA4B36",
+          "#9A1563",
+          "#FF4A71",
+          "#D12D50",
+          "#8934D9",
+          "#D53F8C",
+          "#F7775A",
+          "#8934D9"
+        ],
+        "dataLabel": false,
+        "fractionDigits": 2,
+        "gridlines": true,
+        "legend": true,
+        "lineStyle": "curve",
+        "points": false,
+        "showAll": false,
+        "unit": {
+          "position": "left",
+          "value": ""
+        },
+        "xAxis": "_tp_time",
+        "xFormat": "",
+        "xRange": "Infinity",
+        "xTitle": "",
+        "yAxis": "metrics_value",
+        "yRange": {
+          "max": null,
+          "min": null
+        },
+        "yTickLabel": {
+          "maxChar": 25
+        },
+        "yTitle": "GB"
+      }
+    }
+  },
+  {
+    "id": "e3222ebf-fa59-43b7-87f4-725adfd8fd06",
+    "title": "Disk Used",
+    "description": "",
+    "position": {
+      "h": 4,
+      "nextX": 12,
+      "nextY": 9,
+      "w": 12,
+      "x": 0,
+      "y": 5
+    },
+    "viz_type": "chart",
+    "viz_content": "select * except (rm,sm,metrics) from(\n  select _tp_time, array_join(raw:resourceMetrics[*]) as rm\n,(array_filter(x -> x:key = 'host.name' or x:key = 'instance', rm:resource.attributes[*])[1]):value.stringValue as instance,rm:scopeMetrics[*][1] as sm,\nreplace_regex(sm:scope.name,'.*scraper/(.*)','\\\\1') as scope_name\n,array_join(sm:metrics[*]) as metrics,metrics:description as metrics_desc\n,((metrics:sum.dataPoints[*][1]):asInt::uint64)/1024/1024/1024 as metrics_value\nfrom o11y.otlp_metrics where scope_name='filesystemscraper' and metrics_desc='Filesystem bytes used.' settings seek_to='-1h'\n);",
+    "viz_config": {
+      "chartType": "line",
+      "config": {
+        "color": "instance",
+        "colors": [
+          "#ED64A6",
+          "#F0BE3E",
+          "#DA4B36",
+          "#9A1563",
+          "#FF4A71",
+          "#D12D50",
+          "#8934D9",
+          "#D53F8C",
+          "#F7775A",
+          "#8934D9"
+        ],
+        "dataLabel": false,
+        "fractionDigits": 2,
+        "gridlines": true,
+        "legend": true,
+        "lineStyle": "curve",
+        "points": false,
+        "showAll": false,
+        "unit": {
+          "position": "left",
+          "value": ""
+        },
+        "xAxis": "_tp_time",
+        "xFormat": "",
+        "xRange": "Infinity",
+        "xTitle": "",
+        "yAxis": "metrics_value",
+        "yRange": {
+          "max": null,
+          "min": null
+        },
+        "yTickLabel": {
+          "maxChar": 25
+        },
+        "yTitle": "GB"
+      }
+    }
+  },
+  {
+    "id": "a346c230-ee32-4f73-9e35-ec0dec4f9f11",
+    "title": "Real-Time Memory View ",
+    "description": "",
+    "position": {
+      "h": 4,
+      "nextX": 12,
+      "nextY": 13,
+      "w": 6,
+      "x": 6,
+      "y": 9
+    },
+    "viz_type": "chart",
+    "viz_content": "select * except (rm,sm,metrics) from(\n  select _tp_time, array_join(raw:resourceMetrics[*]) as rm\n,(array_filter(x -> x:key = 'host.name' or x:key = 'instance', rm:resource.attributes[*])[1]):value.stringValue as instance,rm:scopeMetrics[*][1] as sm,\nreplace_regex(sm:scope.name,'.*scraper/(.*)','\\\\1') as scope_name\n,array_join(sm:metrics[*]) as metrics,metrics:description as metrics_desc\n,((metrics:sum.dataPoints[*][1]):asInt::uint32)/1024/1024/1024 as metrics_value\nfrom o11y.otlp_metrics where scope_name='memoryscraper' and metrics_desc='Bytes of memory in use.' settings seek_to='-1h'\n);",
+    "viz_config": {
+      "chartType": "table",
+      "config": {
+        "rowCount": 10,
+        "tableStyles": {
+          "_tp_time": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 210
+          },
+          "instance": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 200
+          },
+          "metrics_desc": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 200
+          },
+          "metrics_value": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "sparkline",
+            "name": "",
+            "show": true,
+            "trend": true,
+            "width": 100
+          },
+          "scope_name": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 200
+          }
+        },
+        "tableWrap": false,
+        "updateKey": "instance",
+        "updateMode": "key"
+      }
+    }
+  },
+  {
+    "id": "5b1701f8-0bae-4b10-b160-de864f0390a0",
+    "title": "Real-Time CPU View",
+    "description": "",
+    "position": {
+      "h": 4,
+      "nextX": 6,
+      "nextY": 13,
+      "w": 6,
+      "x": 0,
+      "y": 9
+    },
+    "viz_type": "chart",
+    "viz_content": "select * except (rm,sm,metrics) from(\n  select _tp_time, array_join(raw:resourceMetrics[*]) as rm\n,(array_filter(x -> x:key = 'host.name' or x:key = 'instance', rm:resource.attributes[*])[1]):value.stringValue as instance,rm:scopeMetrics[*][1] as sm,\nreplace_regex(sm:scope.name,'.*scraper/(.*)','\\\\1') as scope_name\n,array_join(sm:metrics[*]) as metrics,metrics:description as metrics_desc\n,(metrics:gauge.dataPoints[*][1]):asDouble::double as metrics_value\nfrom o11y.otlp_metrics where scope_name='loadscraper' and metrics_desc='Average CPU Load over 1 minute.' settings seek_to='-1h'\n);",
+    "viz_config": {
+      "chartType": "table",
+      "config": {
+        "rowCount": 10,
+        "tableStyles": {
+          "_tp_time": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 210
+          },
+          "instance": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 200
+          },
+          "metrics_desc": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 200
+          },
+          "metrics_value": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "sparkline",
+            "name": "",
+            "show": true,
+            "trend": true,
+            "width": 150
+          },
+          "scope_name": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 114
+          }
+        },
+        "tableWrap": false,
+        "updateKey": "instance",
+        "updateMode": "key"
+      }
+    }
+  }
+]
