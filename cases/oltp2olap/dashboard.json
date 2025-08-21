@@ -1,0 +1,35 @@
+[
+  {
+    "id": "9cb17a42-bf3b-4b39-8f5e-7f1eb2071a4d",
+    "title": "Sales Total",
+    "description": "",
+    "position": {
+      "h": 4,
+      "nextX": 3,
+      "nextY": 4,
+      "w": 6,
+      "x": 0,
+      "y": 0
+    },
+    "viz_type": "chart",
+    "viz_content": "SELECT sum(quantityOrdered*priceEach) as total FROM retailer_etl.mv_orderdetails\nsettings seek_to='earliest'",
+    "viz_config": {
+      "chartType": "singleValue",
+      "config": {
+        "color": "blue",
+        "decreaseColor": "red",
+        "delta": true,
+        "fontSize": 64,
+        "fractionDigits": 0,
+        "increaseColor": "green",
+        "sparkline": true,
+        "sparklineColor": "blue",
+        "unit": {
+          "position": "right",
+          "value": ""
+        },
+        "value": "total"
+      }
+    }
+  }
+]
