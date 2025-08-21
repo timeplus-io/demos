@@ -53,8 +53,8 @@ CREATE EXTERNAL TABLE retailer_etl.gcs
 )
 SETTINGS type = 's3', 
     endpoint = 'https://storage.googleapis.com/timeplus-demo', 
-    access_key_id = 'key', 
-    secret_access_key = 'secret', 
+    access_key_id = '${GCS_ACCESS_KEY_ID}', 
+    secret_access_key = '${GCS_SECRET_ACCESS_KEY}', 
     data_format = 'JSONEachRow', 
     write_to = 'retailer_cdc/orders.jsonl', 
     s3_min_upload_file_size = 1024, 
