@@ -1,0 +1,32 @@
+apiVersion: enterprise.splunk.com/v4
+kind: Standalone
+metadata:
+  name: single
+  namespace: splunk-operator
+spec:
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "0.1"
+    limits:
+      memory: "8Gi"
+      cpu: "4"
+  volumeClaimTemplates:
+  - metadata:
+      name: pvc-etc
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
+      storageClassName: standard-rwo
+  - metadata:
+      name: pvc-var
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 100Gi
+      storageClassName: standard-rwo
