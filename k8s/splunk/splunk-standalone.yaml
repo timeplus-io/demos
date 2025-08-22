@@ -11,22 +11,9 @@ spec:
     limits:
       memory: "8Gi"
       cpu: "4"
-  volumeClaimTemplates:
-  - metadata:
-      name: pvc-etc
-    spec:
-      accessModes:
-      - ReadWriteOnce
-      resources:
-        requests:
-          storage: 10Gi
-      storageClassName: standard-rwo
-  - metadata:
-      name: pvc-var
-    spec:
-      accessModes:
-      - ReadWriteOnce
-      resources:
-        requests:
-          storage: 100Gi
-      storageClassName: standard-rwo
+  etcVolumeStorageConfig:
+    storageClassName: standard-rwo
+    storageCapacity: 10Gi
+  varVolumeStorageConfig:
+    storageClassName: standard-rwo
+    storageCapacity: 100Gi
