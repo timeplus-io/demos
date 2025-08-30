@@ -1,0 +1,28 @@
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: play-demo-ssl-cert
+  namespace: play
+spec:
+  domains:
+    - play.demo.timeplus.com
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: play-demo-ingress
+  namespace: play
+  annotations:
+    networking.gke.io/managed-certificates: play-demo-ssl-cert
+spec:
+  rules:
+  - host: play.demo.timeplus.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: timeplus-appserver
+            port:
+              number: 8000
