@@ -1,4 +1,5 @@
 timeplusd:
+  tag: 2.9.9-rc.32
   storage:
     stream:
       className: standard-rwo

@@ -1,0 +1,28 @@
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: timeplus-demo-ssl-cert
+  namespace: timeplus
+spec:
+  domains:
+    - timeplus.demo.timeplus.com
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: timeplus-demo-ingress
+  namespace: timeplus
+  annotations:
+    networking.gke.io/managed-certificates: timeplus-demo-ssl-cert
+spec:
+  rules:
+  - host: timeplus.demo.timeplus.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: timeplus-appserver
+            port:
+              number: 8000
