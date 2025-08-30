@@ -23,6 +23,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: splunk-single-standalone-headless
+            name: splunk-single-standalone-service
             port:
               number: 8000
