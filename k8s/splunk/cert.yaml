@@ -1,0 +1,28 @@
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: splunk-ssl-cert
+  namespace: splunk-operator
+spec:
+  domains:
+    - splunk.demo.timeplus.com
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: splunk-demo-ingress
+  namespace: splunk-operator
+  annotations:
+    networking.gke.io/managed-certificates: splunk-ssl-cert
+spec:
+  rules:
+  - host: splunk.demo.timeplus.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: timeplus-appserver
+            port:
+              number: 8000
