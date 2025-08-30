@@ -23,6 +23,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: timeplus-appserver
+            name: splunk-single-standalone-headless
             port:
               number: 8000
