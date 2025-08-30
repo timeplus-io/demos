@@ -7,12 +7,33 @@ spec:
   domains:
     - splunk.demo.timeplus.com
 ---
+
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: splunk-backendconfig
+  namespace: splunk-operator
+spec:
+  healthCheck:
+    checkIntervalSec: 10
+    timeoutSec: 5
+    healthyThreshold: 1
+    unhealthyThreshold: 3
+    type: HTTP
+    requestPath: /en-US/account/login
+    port: 8000
+  timeoutSec: 30
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: splunk-demo-ingress
   namespace: splunk-operator
   annotations:
+    # Add backend configuration
+    cloud.google.com/backend-config: '{"default": "splunk-backendconfig"}'
+    # Keep your existing annotations
+    ingress.gcp.kubernetes.io/pre-shared-cert: mcrt-ce69576e-a560-402a-a798-25eafdd64b17
     networking.gke.io/managed-certificates: splunk-ssl-cert
 spec:
   rules:
