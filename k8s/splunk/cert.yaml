@@ -23,6 +23,28 @@ spec:
     port: 8000
   timeoutSec: 30
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: splunk-web
+  namespace: splunk-operator
+  annotations:
+    cloud.google.com/neg: '{"ingress": true}'
+    cloud.google.com/backend-config: '{"default": "splunk-backendconfig"}'
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 8000
+    targetPort: 8000
+    protocol: TCP
+  selector:
+    app.kubernetes.io/component: standalone
+    app.kubernetes.io/instance: splunk-single-standalone
+    app.kubernetes.io/managed-by: splunk-operator
+    app.kubernetes.io/name: standalone
+    app.kubernetes.io/part-of: splunk-single-standalone
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -39,6 +61,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: splunk-single-standalone-service
+            name: splunk-web
             port:
               number: 8000
