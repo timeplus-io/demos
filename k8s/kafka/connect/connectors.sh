@@ -13,6 +13,8 @@ curl -X POST http://localhost:8083/connectors \
       "database.include.list": "retailer",
       "table.include.list": "retailer.orders,retailer.orderdetails,retailer.products",
       "include.schema.changes": "false",
+      "schema.history.internal": "io.debezium.storage.file.history.FileSchemaHistory",
+      "schema.history.internal.file.filename": "/tmp/schema-history.dat",
       "transforms": "route",
       "transforms.route.type": "org.apache.kafka.connect.transforms.RegexRouter",
       "transforms.route.regex": "demo.cdc.mysql.retailer.retailer.(.*)",
