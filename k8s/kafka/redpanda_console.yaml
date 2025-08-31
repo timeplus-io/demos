@@ -15,26 +15,8 @@ data:
   config.yaml: |
     kafka:
       brokers:
-        - "kafka.demo.timeplus.com:9092"
+        - "10.138.0.23:9092"
       sasl:
-        enabled: true
-        mechanism: "PLAIN"
-        username: "demo"
-        password: "demo123"
-      tls:
-        enabled: false  # Disabled for demo - enable for production
-        insecureSkipTlsVerify: true
-      clientId: "redpanda-console"
-      rackId: ""
-      
-    # Connect clusters (optional)
-    connect:
-      enabled: false
-      clusters: []
-    
-    # Console specific settings
-    console:
-      topicDocumentation:
         enabled: false
       
     server:
