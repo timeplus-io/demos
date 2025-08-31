@@ -32,6 +32,39 @@ spec:
       labels:
         app: kafka-connect
     spec:
+      # Set security context to fix permissions
+      securityContext:
+        fsGroup: 1001
+        runAsUser: 1001
+        runAsGroup: 1001
+      initContainers:
+      - name: plugin-installer
+        image: curlimages/curl:latest
+        securityContext:
+          runAsUser: 0  # Run as root to fix permissions
+        command:
+        - sh
+        - -c
+        - |
+          # Fix permissions first
+          chown -R 1001:1001 /opt/kafka/plugins
+          chmod -R 755 /opt/kafka/plugins
+          
+          # Download plugin if not exists
+          cd /opt/kafka/plugins
+          if [ ! -d "debezium-connector-mysql-2.7.0.Final" ]; then
+            echo "Downloading Debezium MySQL connector..."
+            curl -L -o debezium-mysql-connector.tgz https://repo1.maven.org/maven2/io/debezium/debezium-connector-mysql/2.7.0.Final/debezium-connector-mysql-2.7.0.Final-plugin.tar.gz
+            tar -xzf debezium-mysql-connector.tgz
+            rm debezium-mysql-connector.tgz
+            chown -R 1001:1001 /opt/kafka/plugins
+            echo "Plugin installed successfully"
+          else
+            echo "Plugin already exists, skipping download"
+          fi
+        volumeMounts:
+        - name: plugins-volume
+          mountPath: /opt/kafka/plugins
       containers:
       - name: kafka-connect
         image: confluentinc/cp-kafka-connect:latest
@@ -39,7 +72,7 @@ spec:
         - containerPort: 8083
         env:
         - name: CONNECT_BOOTSTRAP_SERVERS
-          value: "10.138.0.23:9092"
+          value: "kafka-service:9092"
         - name: CONNECT_REST_ADVERTISED_HOST_NAME
           valueFrom:
             fieldRef:
