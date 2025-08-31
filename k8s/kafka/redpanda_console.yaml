@@ -1,0 +1,121 @@
+---
+# Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kafka
+---
+# ConfigMap for Console configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: console-config
+  namespace: kafka
+data:
+  config.yaml: |
+    kafka:
+      brokers:
+        - "kafka.demo.timeplus.com:9092"
+      sasl:
+        enabled: true
+        mechanism: "PLAIN"
+        username: "demo"
+        password: "demo123"
+      tls:
+        enabled: false  # Disabled for demo - enable for production
+        insecureSkipTlsVerify: true
+      clientId: "redpanda-console"
+      rackId: ""
+      
+    # Connect clusters (optional)
+    connect:
+      enabled: false
+      clusters: []
+    
+    # Console specific settings
+    console:
+      topicDocumentation:
+        enabled: false
+      
+    server:
+      listenPort: 8080
+      gracefulShutdownTimeout: 30s
+      readTimeout: 30s
+      writeTimeout: 30s
+      idleTimeout: 30s
+      
+    logger:
+      level: info
+---
+# Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redpanda-console
+  namespace: kafka
+  labels:
+    app: redpanda-console
+spec:
+  replicas: 1  # Single replica for demo
+  selector:
+    matchLabels:
+      app: redpanda-console
+  template:
+    metadata:
+      labels:
+        app: redpanda-console
+    spec:
+      containers:
+      - name: console
+        image: redpandadata/console:v2.3.8
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: CONFIG_FILEPATH
+          value: "/etc/console/config.yaml"
+        volumeMounts:
+        - name: config
+          mountPath: /etc/console
+          readOnly: true
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /admin/health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /admin/health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: config
+        configMap:
+          name: console-config
+---
+# Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: redpanda-console-service
+  namespace: kafka
+  labels:
+    app: redpanda-console
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: redpanda-console
