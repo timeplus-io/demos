@@ -12,6 +12,7 @@ curl -X POST http://localhost:8083/connectors \
       "topic.prefix": "demo.cdc.mysql.retailer",
       "database.include.list": "retailer",
       "table.include.list": "retailer.orders,retailer.orderdetails,retailer.products",
+      "include.schema.changes": "false",
       "transforms": "route",
       "transforms.route.type": "org.apache.kafka.connect.transforms.RegexRouter",
       "transforms.route.regex": "demo.cdc.mysql.retailer.retailer.(.*)",
