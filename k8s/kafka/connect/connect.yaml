@@ -1,0 +1,103 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kafka
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kafka-connect-plugins-pvc
+  namespace: kafka
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-connect
+  namespace: kafka
+  labels:
+    app: kafka-connect
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-connect
+  template:
+    metadata:
+      labels:
+        app: kafka-connect
+    spec:
+      containers:
+      - name: kafka-connect
+        image: confluentinc/cp-kafka-connect:latest
+        ports:
+        - containerPort: 8083
+        env:
+        - name: CONNECT_BOOTSTRAP_SERVERS
+          value: "10.138.0.23:9092"
+        - name: CONNECT_REST_ADVERTISED_HOST_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: CONNECT_GROUP_ID
+          value: "connect-cluster"
+        - name: CONNECT_CONFIG_STORAGE_TOPIC
+          value: "connect-configs"
+        - name: CONNECT_OFFSET_STORAGE_TOPIC
+          value: "connect-offsets"
+        - name: CONNECT_STATUS_STORAGE_TOPIC
+          value: "connect-status"
+        - name: CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR
+          value: "1"
+        - name: CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR
+          value: "1"
+        - name: CONNECT_STATUS_STORAGE_REPLICATION_FACTOR
+          value: "1"
+        - name: CONNECT_KEY_CONVERTER
+          value: "org.apache.kafka.connect.json.JsonConverter"
+        - name: CONNECT_VALUE_CONVERTER
+          value: "org.apache.kafka.connect.json.JsonConverter"
+        - name: CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE
+          value: "false"
+        - name: CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE
+          value: "false"
+        - name: CONNECT_PLUGIN_PATH
+          value: "/usr/share/java,/opt/kafka/plugins"
+        - name: CONNECT_REST_PORT
+          value: "8083"
+        volumeMounts:
+        - name: plugins-volume
+          mountPath: /opt/kafka/plugins
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1"
+      volumes:
+      - name: plugins-volume
+        persistentVolumeClaim:
+          claimName: kafka-connect-plugins-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-connect-service
+  namespace: kafka
+  labels:
+    app: kafka-connect
+spec:
+  selector:
+    app: kafka-connect
+  ports:
+  - protocol: TCP
+    port: 8083
+    targetPort: 8083
+    name: rest-api
+  type: ClusterIP
