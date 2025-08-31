@@ -106,8 +106,10 @@ spec:
         volumeMounts:
         - name: plugins-volume
           mountPath: /opt/kafka/plugins
-        - name: config-tmp
+        - name: config-tmp-kafka-connect
           mountPath: /etc/kafka-connect
+        - name: config-tmp-kafka
+          mountPath: /etc/kafka
         resources:
           requests:
             memory: "1Gi"
@@ -119,7 +121,9 @@ spec:
       - name: plugins-volume
         persistentVolumeClaim:
           claimName: kafka-connect-plugins-pvc
-      - name: config-tmp
+      - name: config-tmp-kafka-connect
+        emptyDir: {}
+      - name: config-tmp-kafka
         emptyDir: {}
 ---
 apiVersion: v1
