@@ -1,0 +1,12 @@
+altair>=5.5.0
+fastapi>=0.115.12
+google-genai>=1.21.1
+google-generativeai>=0.8.5
+marimo>=0.13.15
+pandas>=2.3.0
+polars>=1.30.0
+pyarrow>=20.0.0
+ruff>=0.11.13
+sqlalchemy>=2.0.41
+sqlglot>=26.26.0
+timeplus-connect>=0.8.17
