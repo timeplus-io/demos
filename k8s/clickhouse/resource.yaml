@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: clickhouse
+
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -15,6 +16,10 @@ data:
         <logger>
             <level>information</level>
             <console>true</console>
+            <log>/var/log/clickhouse-server/clickhouse-server.log</log>
+            <errorlog>/var/log/clickhouse-server/clickhouse-server.err.log</errorlog>
+            <size>1000M</size>
+            <count>3</count>
         </logger>
         
         <http_port>8123</http_port>
@@ -32,11 +37,21 @@ data:
         <user_files_path>/var/lib/clickhouse/user_files/</user_files_path>
         <format_schema_path>/var/lib/clickhouse/format_schemas/</format_schema_path>
         
+        <user_directories>
+            <users_xml>
+                <path>/etc/clickhouse-server/users.xml</path>
+            </users_xml>
+        </user_directories>
+        
         <default_profile>default</default_profile>
         <default_database>default</default_database>
         
         <timezone>UTC</timezone>
         <mlock_executable>false</mlock_executable>
+        
+        <builtin_dictionaries_reload_interval>3600</builtin_dictionaries_reload_interval>
+        <max_session_timeout>3600</max_session_timeout>
+        <default_session_timeout>60</default_session_timeout>
     </clickhouse>
 
   users.xml: |
@@ -58,20 +73,24 @@ data:
         </profiles>
         
         <users>
-            <default>
+            <admin>
                 <password>Password!</password>
-                <networks incl="networks_config" />
-                <profile>admin</profile>
+                <networks>
+                    <ip>::/0</ip>
+                </networks>
+                <profile>default</profile>
                 <quota>default</quota>
                 <access_management>1</access_management>
-            </default>
+            </admin>
             
-            <readonly>
+            <demo>
                 <password>demo123</password>
-                <networks incl="networks_config" />
-                <profile>demo</profile>
+                <networks>
+                    <ip>::/0</ip>
+                </networks>
+                <profile>readonly</profile>
                 <quota>default</quota>
-            </readonly>
+            </demo>
         </users>
         
         <quotas>
@@ -86,14 +105,6 @@ data:
                 </interval>
             </default>
         </quotas>
-    </clickhouse>
-
-  networks.xml: |
-    <?xml version="1.0"?>
-    <clickhouse>
-        <networks_config>
-            <ip>::/0</ip>
-        </networks_config>
     </clickhouse>
 
 ---
@@ -125,15 +136,14 @@ spec:
         volumeMounts:
         - name: clickhouse-data
           mountPath: /var/lib/clickhouse
+        - name: clickhouse-logs
+          mountPath: /var/log/clickhouse-server
         - name: clickhouse-config
           mountPath: /etc/clickhouse-server/config.xml
           subPath: config.xml
         - name: clickhouse-config
           mountPath: /etc/clickhouse-server/users.xml
           subPath: users.xml
-        - name: clickhouse-config
-          mountPath: /etc/clickhouse-server/config.d/networks.xml
-          subPath: networks.xml
         resources:
           requests:
             memory: "1Gi"
@@ -157,6 +167,8 @@ spec:
       - name: clickhouse-data
         persistentVolumeClaim:
           claimName: clickhouse-pvc
+      - name: clickhouse-logs
+        emptyDir: {}
       - name: clickhouse-config
         configMap:
           name: clickhouse-config
@@ -172,7 +184,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 2Gi
+      storage: 10Gi
 
 ---
 apiVersion: v1
@@ -553,7 +565,7 @@ data:
             const response = await axios.post(clickhouseUrl, query + ' FORMAT JSONCompact', {
                 headers: {
                     'Content-Type': 'text/plain',
-                    'Authorization': 'Basic ' + Buffer.from('default:clickhouse123').toString('base64')
+                    'Authorization': 'Basic ' + Buffer.from('admin:Password!').toString('base64')
                 },
                 timeout: 30000
             });
