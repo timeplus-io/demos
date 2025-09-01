@@ -74,6 +74,20 @@ data:
                 <use_uncompressed_cache>0</use_uncompressed_cache>
                 <load_balancing>random</load_balancing>
                 <readonly>1</readonly>
+                <allow_ddl>0</allow_ddl>
+                <allow_introspection_functions>1</allow_introspection_functions>
+                <!-- Allow certain settings to be modified even in readonly mode -->
+                <constraints>
+                    <add_http_cors_header>
+                        <readonly>0</readonly>
+                    </add_http_cors_header>
+                    <output_format_json_named_tuples_as_objects>
+                        <readonly>0</readonly>
+                    </output_format_json_named_tuples_as_objects>
+                    <input_format_skip_unknown_fields>
+                        <readonly>0</readonly>
+                    </input_format_skip_unknown_fields>
+                </constraints>
             </readonly>
         </profiles>
         
