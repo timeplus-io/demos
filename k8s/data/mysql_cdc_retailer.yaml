@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-retailer-simulator
+  namespace: data
+  labels:
+    app: mysql-retailer-simulator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-retailer-simulator
+  template:
+    metadata:
+      labels:
+        app: mysql-retailer-simulator
+    spec:
+      containers:
+      - name: mysql-retailer-simulator
+        image: timeplus/mysql-retailer-simulator:5d9a0d7
+        env:
+        - name: DB_HOST
+          value: "35.247.93.97"
+        - name: DB_USER
+          value: "admin"
+        - name: DB_PASSWORD
+          value: "Password!"
+        - name: DB_NAME
+          value: "retailer"
+        - name: DB_PORT
+          value: "3306"
+        # Optional: Add resource limits
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      restartPolicy: Always
