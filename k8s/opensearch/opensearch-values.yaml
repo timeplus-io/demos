@@ -4,12 +4,16 @@ replicas: 1
 # Cluster settings for single node
 opensearchJavaOpts: "-Xmx1g -Xms1g"
 
+# Disable cluster formation for single node
+singleNode: true
+
 config:
   opensearch.yml: |
     cluster.name: opensearch-cluster
     network.host: 0.0.0.0
     discovery.type: single-node
     plugins.security.disabled: true
+    bootstrap.memory_lock: false
 
 # Resource limits
 resources:
@@ -37,3 +41,14 @@ service:
   port: 9200
   annotations:
     cloud.google.com/load-balancer-type: "External"
+
+# IMPORTANT: Override cluster formation settings for single node
+masterService: ""
+clusterName: "opensearch-cluster"
+
+# Disable cluster bootstrap settings that conflict with single-node
+extraEnvs:
+  - name: DISABLE_INSTALL_DEMO_CONFIG
+    value: "true"
+  - name: discovery.type
+    value: single-node
