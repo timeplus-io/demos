@@ -1,8 +1,13 @@
-# OpenSearch connection
-opensearchHosts: "http://opensearch-cluster-master:9200"
+opensearchHosts: "http://opensearch-cluster-master:9200"  # HTTP, not HTTPS
 replicas: 1
 
-# Resources
+config:
+  opensearch_dashboards.yml: |
+    server.name: opensearch-dashboards
+    server.host: 0.0.0.0
+    opensearch.hosts: ["http://opensearch-cluster-master:9200"]
+    server.ssl.enabled: false
+
 resources:
   requests:
     cpu: "100m"
@@ -11,24 +16,16 @@ resources:
     cpu: "500m"
     memory: "1Gi"
 
-# Service configuration - LoadBalancer for external access
 service:
   type: LoadBalancer
   port: 5601
   annotations:
     cloud.google.com/load-balancer-type: "External"
 
-# Configuration for dev environment
-config:
-  opensearch_dashboards.yml: |
-    server.name: opensearch-dashboards
-    server.host: 0.0.0.0
-    opensearch.hosts: ["http://opensearch-cluster-master:9200"]
-    opensearch_security.disabled: true
-    opensearch_security.multitenancy.enabled: false
-    server.ssl.enabled: false
-
-# Security context
-securityContext:
+podSecurityContext:
   fsGroup: 1000
   runAsUser: 1000
+
+securityContext:
+  runAsUser: 1000
+  runAsNonRoot: true
