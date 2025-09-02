@@ -11,6 +11,11 @@ install:
 		--values opensearch-values.yaml \
 		--version 2.15.0
 
+upgrade:
+	helm upgrade opensearch opensearch/opensearch \
+		--namespace $(NS) \
+		--values opensearch-values.yaml
+
 install_dashboard:
 	helm install opensearch-dashboards opensearch/opensearch-dashboards \
 		--namespace $(NS) \
