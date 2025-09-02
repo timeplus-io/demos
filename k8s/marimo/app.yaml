@@ -41,24 +41,18 @@ spec:
             memory: "2Gi"
             cpu: "1000m"
         livenessProbe:
-          httpGet:
-            path: /
+          tcpSocket:
             port: 8080
-            scheme: HTTP
-          initialDelaySeconds: 30
+          initialDelaySeconds: 45  # Give Marimo time to fully start
           periodSeconds: 10
           timeoutSeconds: 5
-          successThreshold: 1
           failureThreshold: 3
         readinessProbe:
-          httpGet:
-            path: /
+          tcpSocket:
             port: 8080
-            scheme: HTTP
-          initialDelaySeconds: 5
+          initialDelaySeconds: 15  # Check if port is open
           periodSeconds: 5
           timeoutSeconds: 3
-          successThreshold: 1
           failureThreshold: 3
 ---
 apiVersion: v1
