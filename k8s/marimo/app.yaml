@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: marimo
+  labels:
+    name: marimo
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: marimo-app
+  namespace: marimo
+  labels:
+    app: marimo-app
+spec:
+  replicas: 1 
+  selector:
+    matchLabels:
+      app: marimo-app
+  template:
+    metadata:
+      labels:
+        app: marimo-app
+    spec:
+      securityContext:
+        fsGroup: 1000
+      containers:
+      - name: marimo
+        image: timeplus/marimo:d5bd06e
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: TP_HOST
+          value: "timeplusd-svc.timeplus"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: marimo-app-service
+  namespace: marimo
+  labels:
+    app: marimo-app
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: marimo-app
