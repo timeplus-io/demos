@@ -1,6 +1,8 @@
 # Single node configuration
 replicas: 1
 
+imageTag: "2.11.1" 
+
 # Cluster settings for single node
 opensearchJavaOpts: "-Xmx1g -Xms1g"
 
