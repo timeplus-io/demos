@@ -1,5 +1,5 @@
 # OpenSearch connection
-opensearchHosts: "http://opensearch-cluster-master-headless.opensearch:9200"
+opensearchHosts: "http://opensearch-cluster-master:9200"
 replicas: 1
 
 # Resources
