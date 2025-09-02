@@ -12,10 +12,10 @@ config:
     cluster.name: opensearch-cluster
     network.host: 0.0.0.0
     discovery.type: single-node
-    # Enable security but disable SSL
+    # Enable security with SSL
     plugins.security.disabled: false
-    plugins.security.ssl.transport.enabled: false
-    plugins.security.ssl.http.enabled: false
+    plugins.security.ssl.transport.enabled: true
+    plugins.security.ssl.http.enabled: true
     plugins.security.allow_default_init_securityindex: true
     plugins.security.allow_unsafe_democertificates: true
     plugins.security.audit.type: internal_opensearch
