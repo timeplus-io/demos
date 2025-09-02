@@ -53,3 +53,5 @@ extraEnvs:
     value: "true"
   - name: discovery.type
     value: single-node
+  - name: OPENSEARCH_INITIAL_ADMIN_PASSWORD
+    value: "Password!"  # Your admin password
