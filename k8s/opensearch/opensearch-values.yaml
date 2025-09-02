@@ -12,16 +12,7 @@ config:
     cluster.name: opensearch-cluster
     network.host: 0.0.0.0
     discovery.type: single-node
-    # Enable security with SSL
-    plugins.security.disabled: false
-    plugins.security.ssl.transport.enabled: true
-    plugins.security.ssl.http.enabled: true
-    plugins.security.allow_default_init_securityindex: true
-    plugins.security.allow_unsafe_democertificates: true
-    plugins.security.audit.type: internal_opensearch
-    plugins.security.enable_snapshot_restore_privilege: true
-    plugins.security.check_snapshot_restore_write_privileges: true
-    plugins.security.restapi.roles_enabled: ["all_access", "security_rest_api_access"]
+    plugins.security.disabled: true
     bootstrap.memory_lock: false
 
 # Resource limits
