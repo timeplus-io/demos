@@ -41,18 +41,24 @@ spec:
             memory: "2Gi"
             cpu: "1000m"
         livenessProbe:
-          tcpSocket:
+          httpGet:
+            path: /health          # Official Marimo health endpoint
             port: 8080
-          initialDelaySeconds: 45  # Give Marimo time to fully start
+            scheme: HTTP
+          initialDelaySeconds: 60  # Give Marimo more time to fully start
           periodSeconds: 10
           timeoutSeconds: 5
+          successThreshold: 1
           failureThreshold: 3
         readinessProbe:
-          tcpSocket:
+          httpGet:
+            path: /healthz         # Alternative health endpoint for cloud providers
             port: 8080
-          initialDelaySeconds: 15  # Check if port is open
+            scheme: HTTP
+          initialDelaySeconds: 30  # Wait for Marimo to be ready
           periodSeconds: 5
           timeoutSeconds: 3
+          successThreshold: 1
           failureThreshold: 3
 ---
 apiVersion: v1
