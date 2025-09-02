@@ -1,33 +1,98 @@
+---
+# Namespace for Marimo
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: marimo-notebooks
+  labels:
+    name: marimo-notebooks
+
+---
+# ConfigMap for Marimo configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: marimo-config
+  namespace: marimo-notebooks
+data:
+  # Basic marimo configuration
+  marimo.toml: |
+    [display]
+    theme = "light"
+    code_editor_font_size = 14
+    
+    [runtime]
+    auto_instantiate = true
+    
+    [server]
+    browser = false
+
+---
+# PersistentVolumeClaim for notebook storage
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: marimo-notebooks-pvc
+  namespace: marimo-notebooks
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard  # Adjust based on your cluster
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+# Deployment for Marimo edit server
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: marimo-app
-  namespace: marimo
+  name: marimo-edit-server
+  namespace: marimo-notebooks
   labels:
-    app: marimo
+    app: marimo-edit
 spec:
-  replicas: 2
+  replicas: 1  # Single replica for edit mode to maintain session state
   selector:
     matchLabels:
-      app: marimo
+      app: marimo-edit
   template:
     metadata:
       labels:
-        app: marimo
+        app: marimo-edit
     spec:
+      securityContext:
+        fsGroup: 1000
       containers:
-      - name: marimo-app
-        # Replace with your actual image URL
-        image: us-central1-docker.pkg.dev/YOUR_PROJECT_ID/marimo-repo/marimo-app:latest
+      - name: marimo
+        image: ghcr.io/marimo-team/marimo:latest-sql
         ports:
         - containerPort: 8080
+          name: http
+        command: ["marimo", "edit"]
+        args: 
+          - "--headless"
+          - "--no-token"  # Remove authentication for internal access
+          - "--host=0.0.0.0"
+          - "--port=8080"
+          - "--dir=/notebooks"
+        env:
+        - name: MARIMO_CONFIG_PATH
+          value: "/config/marimo.toml"
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        volumeMounts:
+        - name: notebooks-storage
+          mountPath: /notebooks
+        - name: config-volume
+          mountPath: /config
         resources:
           requests:
-            memory: "256Mi"
+            memory: "512Mi"
             cpu: "250m"
           limits:
-            memory: "512Mi"
-            cpu: "500m"
+            memory: "2Gi"
+            cpu: "1000m"
         livenessProbe:
           httpGet:
             path: /health
@@ -40,25 +105,29 @@ spec:
             port: 8080
           initialDelaySeconds: 5
           periodSeconds: 5
-        env:
-        - name: MARIMO_HOST
-          value: "0.0.0.0"
-        - name: MARIMO_PORT
-          value: "8080"
+      volumes:
+      - name: notebooks-storage
+        persistentVolumeClaim:
+          claimName: marimo-notebooks-pvc
+      - name: config-volume
+        configMap:
+          name: marimo-config
+
 ---
+# Service for Marimo
 apiVersion: v1
 kind: Service
 metadata:
-  name: marimo-service
-  namespace: marimo
+  name: marimo-edit-service
+  namespace: marimo-notebooks
   labels:
-    app: marimo
+    app: marimo-edit
 spec:
-  type: LoadBalancer
-  selector:
-    app: marimo
+  type: ClusterIP
   ports:
-  - port: 80
+  - port: 8080
     targetPort: 8080
     protocol: TCP
-  sessionAffinity: ClientIP
+    name: http
+  selector:
+    app: marimo-edit

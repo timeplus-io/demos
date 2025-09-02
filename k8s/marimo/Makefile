@@ -12,6 +12,4 @@ docker: Dockerfile
 		--push .
 
 run:
-	docker run -it --rm -e DB_HOST=$(DB_HOST) \
-		-e DB_USER=$(DB_USER) -e DB_PASSWORD=$(DB_PASSWORD) \
-		-e DB_NAME=$(DB_NAME) -e DB_PORT=$(DB_PORT) $(FULLNAME) 
+	docker run -it --rm -p 8080:8080 $(FULLNAME) 
