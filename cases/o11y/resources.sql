@@ -22,12 +22,14 @@ CREATE STREAM o11y.otlp_metrics
 ENGINE = ExternalStream
 SETTINGS type = 'kafka', brokers = '10.138.0.23:9092', topic = 'otlp_metrics';
 
+
 CREATE STREAM o11y.splunk_t1
 (
-  `raw` string
+  `event` string,
+  sourcetype string default 'otel'
 )
 ENGINE = ExternalStream
-SETTINGS type = 'http', data_format = 'JSONEachRow', http_header_Authorization = 'Splunk 8367dcdd-cbad-4770-96da-8367240f11bb', url = 'http://hec.splunk.demo.timeplus.com:8088/services/collector/event'
+SETTINGS type = 'http', http_header_Authorization = 'Splunk f50aef7d-bd49-4ff3-90f9-d8ac54ecbe37', url = 'http://35.230.87.146:8088/services/collector'
 COMMENT 'send message to splunk.demo.timeplus.com';
 
 -- MV
@@ -43,19 +45,13 @@ FROM
   o11y.otlp_metrics)
 COMMENT 'Read OpenTelemetry JSON messages from Kafka, apply optional filter/transformation and write to OpenSearch index';
 
+
 CREATE MATERIALIZED VIEW o11y.mv_otel_kafka2splunk INTO o11y.splunk_t1
 (
-  `raw` string,
-  `_tp_time` datetime64(3, 'UTC') DEFAULT now64(3, 'UTC'),
-  `_tp_sn` int64
+  `event` string,
 ) AS(
 SELECT
-  raw
+  raw as event
 FROM
   o11y.otlp_metrics)
 COMMENT 'Read OpenTelemetry JSON messages from Kafka, apply optional filter/transformation and write to Splunk index';
-
-
-
-
-
