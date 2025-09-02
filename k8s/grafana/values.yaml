@@ -1,12 +1,11 @@
 # grafana-values.yaml
-plugins:
-  - https://github.com/timeplus-io/proton-grafana-source/releases/download/v1.0.6/timeplus-proton-datasource-1.0.6.zip
 
-# Optional: Set environment variables for plugin installation
+# Install plugins via environment variable
 env:
-  GF_INSTALL_PLUGINS: https://github.com/timeplus-io/proton-grafana-source/releases/download/v1.0.6/timeplus-proton-datasource-1.0.6.zip
+  GF_INSTALL_PLUGINS: "https://github.com/timeplus-io/proton-grafana-source/releases/download/v1.0.6/timeplus-proton-datasource-1.0.6.zip"
+  GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: "timeplus-proton-datasource"
 
-# Enable plugin loading
+# Alternative: Configure via grafana.ini
 grafana.ini:
   plugins:
-    allow_loading_unsigned_plugins: timeplus-proton-datasource
+    allow_loading_unsigned_plugins: "timeplus-proton-datasource"
