@@ -1,8 +1,6 @@
 # Single node configuration
 replicas: 1
 
-imageTag: "2.11.1" 
-
 # Cluster settings for single node
 opensearchJavaOpts: "-Xmx1g -Xms1g"
 
@@ -44,8 +42,9 @@ service:
   annotations:
     cloud.google.com/load-balancer-type: "External"
 
-# IMPORTANT: Override cluster formation settings for single node
-masterService: ""
+# REMOVE THIS LINE - it's causing the issue
+# masterService: ""
+
 clusterName: "opensearch-cluster"
 
 # Disable cluster bootstrap settings that conflict with single-node
