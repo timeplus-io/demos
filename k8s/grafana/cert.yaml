@@ -1,0 +1,28 @@
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: grafana-demo-ssl-cert
+  namespace: grafana
+spec:
+  domains:
+    - grafana.demo.timeplus.com
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: grafana-demo-ingress
+  namespace: grafana
+  annotations:
+    networking.gke.io/managed-certificates: grafana-demo-ssl-cert
+spec:
+  rules:
+  - host: grafana.demo.timeplus.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: grafana
+            port:
+              number: 80
