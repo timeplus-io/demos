@@ -1,0 +1,39 @@
+# Single node configuration
+replicas: 1
+
+# Cluster settings for single node
+opensearchJavaOpts: "-Xmx1g -Xms1g"
+
+config:
+  opensearch.yml: |
+    cluster.name: opensearch-cluster
+    network.host: 0.0.0.0
+    discovery.type: single-node
+    plugins.security.disabled: true
+
+# Resource limits
+resources:
+  requests:
+    cpu: "500m"
+    memory: "1Gi"
+  limits:
+    cpu: "1000m"
+    memory: "2Gi"
+
+# Persistence
+persistence:
+  enabled: true
+  storageClass: "standard-rwo"
+  size: 3Gi
+
+# Security context
+securityContext:
+  fsGroup: 1000
+  runAsUser: 1000
+
+# Service configuration - LoadBalancer for external access
+service:
+  type: LoadBalancer
+  port: 9200
+  annotations:
+    cloud.google.com/load-balancer-type: "External"

@@ -1,0 +1,34 @@
+# OpenSearch connection
+opensearchHosts: "http://opensearch-cluster-master:9200"
+replicas: 1
+
+# Resources
+resources:
+  requests:
+    cpu: "100m"
+    memory: "512Mi"
+  limits:
+    cpu: "500m"
+    memory: "1Gi"
+
+# Service configuration - LoadBalancer for external access
+service:
+  type: LoadBalancer
+  port: 5601
+  annotations:
+    cloud.google.com/load-balancer-type: "External"
+
+# Configuration for dev environment
+config:
+  opensearch_dashboards.yml: |
+    server.name: opensearch-dashboards
+    server.host: 0.0.0.0
+    opensearch.hosts: ["http://opensearch-cluster-master:9200"]
+    opensearch_security.auth.type: ""
+    opensearch.ssl.verificationMode: none
+    server.ssl.enabled: false
+
+# Security context
+securityContext:
+  fsGroup: 1000
+  runAsUser: 1000
