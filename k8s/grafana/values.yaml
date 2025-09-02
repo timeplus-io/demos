@@ -2,7 +2,7 @@
 
 # Install plugins via environment variable
 env:
-  GF_INSTALL_PLUGINS: "https://github.com/timeplus-io/proton-grafana-source/releases/download/v1.0.6/timeplus-proton-datasource-1.0.6.zip"
+  GF_INSTALL_PLUGINS: "https://d.timeplus.com/grafana/timeplus-proton-datasource-2.1.3.zip"
   GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: "timeplus-proton-datasource"
 
 # Alternative: Configure via grafana.ini
