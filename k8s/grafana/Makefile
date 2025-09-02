@@ -21,3 +21,8 @@ forward:
 
 expose:
 	kubectl patch svc grafana --namespace $(NS) -p '{"spec": {"type": "LoadBalancer"}}'
+
+upgrade:
+	helm upgrade grafana grafana/grafana \
+		--namespace $(NS) \
+		--values values.yaml
