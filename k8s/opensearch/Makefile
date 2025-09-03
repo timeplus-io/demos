@@ -22,3 +22,5 @@ install_dashboard:
 		--values opensearch-dashboard-values.yaml \
 		--version 3.2.1
 
+expose_dashboard:
+	kubectl expose deployment opensearch-dashboards -n $(NS) --type=LoadBalancer --name=opensearch-dashboards-elb --port=5601 --target-port=5601
