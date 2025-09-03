@@ -1,11 +1,11 @@
-opensearchHosts: "http://opensearch-cluster-master:9200"  # HTTP, not HTTPS
+opensearchHosts: "http://opensearch-cluster-master-headless:9200"  # HTTP, not HTTPS
 replicas: 1
 
 config:
   opensearch_dashboards.yml: |
     server.name: opensearch-dashboards
     server.host: 0.0.0.0
-    opensearch.hosts: ["http://opensearch-cluster-master:9200"]
+    opensearch.hosts: ["http://opensearch-cluster-master-headless:9200"]
     server.ssl.enabled: false
 
 resources:
