@@ -24,3 +24,7 @@ install_dashboard:
 
 expose_dashboard:
 	kubectl expose deployment opensearch-dashboards -n $(NS) --type=LoadBalancer --name=opensearch-dashboards-elb --port=5601 --target-port=5601
+
+delete:
+	helm uninstall opensearch -n $(NS)
+	helm uninstall opensearch-dashboards -n $(NS)
