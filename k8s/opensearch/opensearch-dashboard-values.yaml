@@ -29,3 +29,7 @@ podSecurityContext:
 securityContext:
   runAsUser: 1000
   runAsNonRoot: true
+
+extraEnvs:
+  - name: DISABLE_SECURITY_DASHBOARDS_PLUGIN
+    value: "true"
