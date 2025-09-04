@@ -98,19 +98,7 @@ data:
                 <quota>default</quota>
                 <access_management>1</access_management>
             </admin>
-            
-            <demo>
-                <password>demo123</password>
-                <networks>
-                    <ip>::/0</ip>
-                </networks>
-                <profile>readonly</profile>
-                <quota>default</quota>
 
-                <grants>
-                    <query>GRANT ALL ON demo.* TO demo</query>
-                </grants>
-            </demo>
         </users>
         
         <quotas>
