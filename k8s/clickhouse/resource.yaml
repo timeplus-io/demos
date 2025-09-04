@@ -106,6 +106,17 @@ data:
                 </networks>
                 <profile>readonly</profile>
                 <quota>default</quota>
+
+                <databases>
+                  <demo>
+                      <query>1</query>      <!-- SELECT permissions -->
+                      <insert>1</insert>    <!-- INSERT permissions -->
+                      <alter>1</alter>      <!-- ALTER permissions -->
+                      <create>1</create>    <!-- CREATE permissions -->
+                      <drop>1</drop>        <!-- DROP permissions -->
+                      <truncate>1</truncate> <!-- TRUNCATE permissions -->
+                  </demo>
+              </databases>
             </demo>
         </users>
         

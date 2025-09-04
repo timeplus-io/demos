@@ -9,10 +9,8 @@ CREATE STREAM o11y.opensearch_t1
 ENGINE = ExternalStream
 SETTINGS type = 'http', 
     data_format = 'OpenSearch', 
-    url = 'https://opensearch.demo.timeplus.com:9200/otlp_metrics/_bulk', 
-    skip_ssl_cert_check = true, 
-    username = 'admin', 
-    password = 'kdjkdg_ddg2K14'
+    url = 'http://34.187.249.72:9200/otlp_metrics/_bulk', 
+    skip_ssl_cert_check = true
 COMMENT 'send message to opensearch.demo.timeplus.com';
 
 CREATE STREAM o11y.otlp_metrics
@@ -34,15 +32,11 @@ COMMENT 'send message to splunk.demo.timeplus.com';
 
 -- MV
 CREATE MATERIALIZED VIEW o11y.mv_otel_kafka2opensearch INTO o11y.opensearch_t1
-(
-  `raw` string,
-  `_tp_time` datetime64(3, 'UTC') DEFAULT now64(3, 'UTC'),
-  `_tp_sn` int64
-) AS(
+AS
 SELECT
   raw
 FROM
-  o11y.otlp_metrics)
+  o11y.otlp_metrics
 COMMENT 'Read OpenTelemetry JSON messages from Kafka, apply optional filter/transformation and write to OpenSearch index';
 
 
