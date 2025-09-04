@@ -1,0 +1,244 @@
+[
+  {
+    "id": "27680685-8679-4643-87fc-cea7af4ab0b7",
+    "title": "Last 1 minute price",
+    "description": "",
+    "position": {
+      "h": 4,
+      "nextX": 12,
+      "nextY": 6,
+      "w": 6,
+      "x": 6,
+      "y": 2
+    },
+    "viz_type": "chart",
+    "viz_content": "SELECT \n  window_start, latest(price) AS value\nFROM \n  tumble(market_data.bitcoin_usd, 1s)\nGROUP BY \n  window_start",
+    "viz_config": {
+      "chartType": "line",
+      "config": {
+        "color": "",
+        "colors": [
+          "#ED64A6",
+          "#F0BE3E",
+          "#DA4B36",
+          "#9A1563",
+          "#FF4A71",
+          "#D12D50",
+          "#8934D9",
+          "#D53F8C",
+          "#F7775A",
+          "#8934D9"
+        ],
+        "dataLabel": false,
+        "decimal": 2,
+        "fractionDigits": 2,
+        "gridlines": true,
+        "legend": false,
+        "lineStyle": "straight",
+        "points": false,
+        "renderDuration": 60,
+        "renderInterval": 500,
+        "showAll": false,
+        "unit": {
+          "position": "left",
+          "value": ""
+        },
+        "xAxis": "window_start",
+        "xRange": "1",
+        "xTitle": "",
+        "yAxis": "value",
+        "yRange": {
+          "max": null,
+          "min": null
+        },
+        "yTickLabel": {},
+        "yTitle": ""
+      }
+    }
+  },
+  {
+    "id": "c3f35fed-976e-4252-a887-53d04017b1dd",
+    "title": "Now vs 5s/5m average ",
+    "description": "",
+    "position": {
+      "h": 4,
+      "nextX": 12,
+      "nextY": 10,
+      "w": 6,
+      "x": 6,
+      "y": 6
+    },
+    "viz_type": "chart",
+    "viz_content": "select window_start,'now' as name,avg(price) as avg from tumble(market_data.bitcoin_usd,1s) group by window_start\nunion\nselect window_start,'5s avg' as name,avg(price) as avg from hop(market_data.bitcoin_usd,1s,5s) where _tp_time > now()-5s group by window_start\nunion\nselect window_start,'5m avg' as name,avg(price) as avg from hop(market_data.bitcoin_usd,1s,5m) where _tp_time > now()-5m group by window_start",
+    "viz_config": {
+      "chartType": "line",
+      "config": {
+        "color": "name",
+        "dataLabel": true,
+        "fractionDigits": 2,
+        "gridlines": true,
+        "legend": true,
+        "lineColor": "",
+        "renderDuration": 60,
+        "renderInterval": 500,
+        "unit": {
+          "value": ""
+        },
+        "xAxis": "window_start",
+        "xRange": "5",
+        "xTitle": "",
+        "yAxis": "avg",
+        "yRange": {
+          "max": null,
+          "min": null
+        },
+        "yTitle": ""
+      }
+    }
+  },
+  {
+    "id": "1f7f6c61-4aba-4aed-8dff-afea77d27ad7",
+    "title": "Live Price",
+    "description": "",
+    "position": {
+      "h": 4,
+      "nextX": 6,
+      "nextY": 6,
+      "w": 6,
+      "x": 0,
+      "y": 2
+    },
+    "viz_type": "chart",
+    "viz_content": "select _tp_time,price  from market_data.bitcoin_usd where _tp_time > now() -15m",
+    "viz_config": {
+      "chartType": "line",
+      "config": {
+        "xTitle": "",
+        "yTitle": "",
+        "legend": false,
+        "dataLabel": false,
+        "colors": [
+          "#ED64A6",
+          "#F0BE3E",
+          "#DA4B36",
+          "#9A1563",
+          "#FF4A71",
+          "#D12D50",
+          "#9344E3",
+          "#D53F8C",
+          "#F7775A",
+          "#9344E3"
+        ],
+        "gridlines": false,
+        "unit": {
+          "position": "left",
+          "value": ""
+        },
+        "fractionDigits": 2,
+        "xAxis": "_tp_time",
+        "yAxis": "price",
+        "color": "",
+        "showAll": false,
+        "lineStyle": "curve",
+        "points": false,
+        "xRange": "Infinity",
+        "yRange": {
+          "min": null,
+          "max": null
+        },
+        "yTickLabel": {
+          "maxChar": 25
+        },
+        "xFormat": ""
+      }
+    }
+  },
+  {
+    "id": "164713b4-e246-46eb-a771-26d9252d9841",
+    "title": "OHLC (every 5s)",
+    "description": "",
+    "position": {
+      "h": 4,
+      "nextX": 6,
+      "nextY": 10,
+      "w": 6,
+      "x": 0,
+      "y": 6
+    },
+    "viz_type": "chart",
+    "viz_content": "with bitcoin as(select _tp_time, price from market_data.bitcoin_usd)\nSELECT window_start as time, earliest(price) AS open, latest(price) AS close, max(price) AS high, min(price) AS low \nFROM tumble(bitcoin, 5s) --where _tp_time>now()-1m \nGROUP BY window_start order by time",
+    "viz_config": {
+      "chartType": "ohlc",
+      "config": {
+        "renderDuration": 60,
+        "renderInterval": 500,
+        "xRange": "1",
+        "yRange": {
+          "max": null,
+          "min": null
+        }
+      }
+    }
+  },
+  {
+    "id": "3d383ec9-e256-4bbd-b4c8-cad5db153584",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 2,
+      "nextX": 12,
+      "nextY": 2,
+      "w": 6,
+      "x": 6,
+      "y": 0
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "SELECT window_start, latest(price) AS value FROM tumble(bitcoin_usd, 1s) GROUP BY window_start"
+    }
+  },
+  {
+    "id": "a7d648c3-87ac-4da9-b7c9-daa39b113d0d",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 2,
+      "nextX": 6,
+      "nextY": 2,
+      "w": 6,
+      "x": 0,
+      "y": 0
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "select _tp_time,price from bitcoin_usd"
+    }
+  },
+  {
+    "id": "bc856250-3dc2-43c5-ba6a-1303d49e34a3",
+    "title": "OHLC (Last 7 days)",
+    "description": "",
+    "position": {
+      "h": 4,
+      "nextX": 12,
+      "nextY": 14,
+      "w": 12,
+      "x": 0,
+      "y": 10
+    },
+    "viz_type": "chart",
+    "viz_content": "WITH bitcoin AS (\n  SELECT\n    _tp_time, \n    price\n  FROM\n    table(market_data.bitcoin_usd)\n  WHERE\n    _tp_time > (now() - 7d) \n)\nSELECT\n  window_start AS time, \n  earliest(price) AS open, \n  latest(price) AS close, \n  max(price) AS high, \n  min(price) AS low\nFROM\n  tumble(bitcoin, 2h)\nGROUP BY\n  window_start\nORDER BY\n  time ASC",
+    "viz_config": {
+      "chartType": "ohlc",
+      "config": {
+        "xRange": "Infinity",
+        "yRange": {
+          "max": null,
+          "min": null
+        }
+      }
+    }
+  }
+]
