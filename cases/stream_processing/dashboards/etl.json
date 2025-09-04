@@ -1,0 +1,356 @@
+[
+  {
+    "id": "b7bf7bef-f5f9-4f46-a9dc-6cbdc5ddf732",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 3,
+      "nextX": 9,
+      "nextY": 6,
+      "w": 6,
+      "x": 6,
+      "y": 3
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "``` \nWITH statusCode AS (SELECT _tp_time,raw:response.statusCode::uint8 as code FROM stream_processing.eventstream),\n  countByStatus AS(\n        SELECT window_start, code, count() AS views\n        FROM tumble(statusCode,5s) GROUP BY window_start,code)\n  SELECT window_start AS ts,code,views\n  FROM countByStatus \n```"
+    }
+  },
+  {
+    "id": "2ffe6dc7-b429-4996-b28f-8b1caee12909",
+    "title": "1. Create an external stream to read from Kafka",
+    "description": "",
+    "position": {
+      "h": 3,
+      "nextX": 6,
+      "nextY": 3,
+      "w": 6,
+      "x": 0,
+      "y": 0
+    },
+    "viz_type": "chart",
+    "viz_content": "show create stream_processing.eventstream",
+    "viz_config": {
+      "chartType": "table",
+      "config": {
+        "rowCount": 5,
+        "tableStyles": {
+          "statement": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          }
+        },
+        "tableWrap": true,
+        "updateKey": "",
+        "updateMode": "all"
+      }
+    }
+  },
+  {
+    "id": "e7d07478-db77-482c-a64c-a6d6a6f2df2e",
+    "title": "Sample data in the Kafka topic",
+    "description": "",
+    "position": {
+      "h": 3,
+      "nextX": 12,
+      "nextY": 3,
+      "w": 6,
+      "x": 6,
+      "y": 0
+    },
+    "viz_type": "chart",
+    "viz_content": "select * from stream_processing.eventstream limit 2",
+    "viz_config": {
+      "chartType": "table",
+      "config": {
+        "rowCount": 5,
+        "tableStyles": {
+          "raw": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          }
+        },
+        "tableWrap": true,
+        "updateKey": "",
+        "updateMode": "all"
+      }
+    }
+  },
+  {
+    "id": "772e8d4e-0e84-46a6-893b-fe5c1461117b",
+    "title": "2. Extract data from JSON and aggregate per 5 sec",
+    "description": "",
+    "position": {
+      "h": 3,
+      "nextX": 6,
+      "nextY": 6,
+      "w": 6,
+      "x": 0,
+      "y": 3
+    },
+    "viz_type": "chart",
+    "viz_content": "  WITH statusCode AS (SELECT _tp_time,raw:response.statusCode::uint8 as code FROM stream_processing.eventstream),\n  countByStatus AS(\n        SELECT window_start, code, count() AS views\n        FROM tumble(statusCode,5s) GROUP BY window_start,code)\n  SELECT window_start AS ts,code,views\n  FROM countByStatus ",
+    "viz_config": {
+      "chartType": "table",
+      "config": {
+        "rowCount": 5,
+        "tableStyles": {
+          "code": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "ts": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "views": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          }
+        },
+        "tableWrap": false,
+        "updateKey": "",
+        "updateMode": "all"
+      }
+    }
+  },
+  {
+    "id": "5c33f51e-54e9-4045-a7a1-7194637ca57b",
+    "title": "3. Create an external table to read from ClickHouse table",
+    "description": "",
+    "position": {
+      "h": 3,
+      "nextX": 6,
+      "nextY": 9,
+      "w": 6,
+      "x": 0,
+      "y": 6
+    },
+    "viz_type": "chart",
+    "viz_content": "show create stream_processing.dim_code_to_status",
+    "viz_config": {
+      "chartType": "table",
+      "config": {
+        "rowCount": 5,
+        "tableStyles": {
+          "statement": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          }
+        },
+        "tableWrap": true,
+        "updateKey": "",
+        "updateMode": "all"
+      }
+    }
+  },
+  {
+    "id": "3de43800-4506-40cd-964c-cd5230336b3c",
+    "title": "4. Create a Materialized View to apply JOIN and send to ClickHouse",
+    "description": "",
+    "position": {
+      "h": 4,
+      "nextX": 6,
+      "nextY": 13,
+      "w": 6,
+      "x": 0,
+      "y": 9
+    },
+    "viz_type": "chart",
+    "viz_content": "show create stream_processing.mv_5s_tumble_then_join",
+    "viz_config": {
+      "chartType": "table",
+      "config": {
+        "rowCount": 5,
+        "tableStyles": {
+          "statement": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          }
+        },
+        "tableWrap": true,
+        "updateKey": "",
+        "updateMode": "all"
+      }
+    }
+  },
+  {
+    "id": "4c7719d2-9de4-4c49-acaf-fd75d83af367",
+    "title": "Sample data in ClickHouse table",
+    "description": "",
+    "position": {
+      "h": 3,
+      "nextX": 12,
+      "nextY": 9,
+      "w": 6,
+      "x": 6,
+      "y": 6
+    },
+    "viz_type": "chart",
+    "viz_content": "select * from stream_processing.dim_code_to_status limit 5",
+    "viz_config": {
+      "chartType": "table",
+      "config": {
+        "rowCount": 5,
+        "tableStyles": {
+          "code": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "rfc": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "status": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          }
+        },
+        "tableWrap": false,
+        "updateKey": "",
+        "updateMode": "all"
+      }
+    }
+  },
+  {
+    "id": "c011b3c2-20c2-49f1-b83d-d1a798cd7298",
+    "title": "Data sent to ClickHouse",
+    "description": "",
+    "position": {
+      "h": 4,
+      "nextX": 12,
+      "nextY": 13,
+      "w": 6,
+      "x": 6,
+      "y": 9
+    },
+    "viz_type": "chart",
+    "viz_content": "  WITH statusCode AS (SELECT _tp_time,raw:response.statusCode::uint8 as code FROM stream_processing.eventstream),\n  countByStatus AS(\n        SELECT window_start, code, count() AS views\n        FROM tumble(statusCode,5s) GROUP BY window_start,code)\n  SELECT window_start AS ts,code,status,views\n  FROM countByStatus JOIN stream_processing.dim_code_to_status USING(code) limit 5",
+    "viz_config": {
+      "chartType": "table",
+      "config": {
+        "rowCount": 5,
+        "tableStyles": {
+          "code": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "status": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "ts": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "views": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          }
+        },
+        "tableWrap": false,
+        "updateKey": "",
+        "updateMode": "all"
+      }
+    }
+  }
+]
