@@ -42,10 +42,16 @@ data:
         <user_files_path>/var/lib/clickhouse/user_files/</user_files_path>
         <format_schema_path>/var/lib/clickhouse/format_schemas/</format_schema_path>
         
+        <!-- Enable SQL-based user management -->
+        <access_control_path>/var/lib/clickhouse/access/</access_control_path>
+        
         <user_directories>
             <users_xml>
                 <path>/etc/clickhouse-server/users.xml</path>
             </users_xml>
+            <local_directory>
+                <path>/var/lib/clickhouse/access/</path>
+            </local_directory>
         </user_directories>
         
         <default_profile>default</default_profile>
@@ -62,8 +68,6 @@ data:
   users.xml: |
     <?xml version="1.0"?>
     <clickhouse>
-        <access_control_path>/var/lib/clickhouse/access/</access_control_path>
-        
         <profiles>
             <default>
                 <max_memory_usage>10000000000</max_memory_usage>
@@ -100,7 +104,6 @@ data:
                 <quota>default</quota>
                 <access_management>1</access_management>
             </admin>
-
         </users>
         
         <quotas>
