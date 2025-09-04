@@ -1,0 +1,75 @@
+[
+  {
+    "id": "76123135-b006-4799-94c8-e2c5da717f5b",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 6,
+      "nextX": 6,
+      "nextY": 6,
+      "w": 6,
+      "x": 0,
+      "y": 0
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "**Timeplus**\n\n---\n\n```sql\nCREATE STREAM frontend_events (\n    version int,\n    requestedUrl string,\n    method string,\n    correlationId string,\n    ipAddress string,\n    requestDuration int,\n    response map(string, int),\n    headers map(string, string)\n) \nENGINE = ExternalStream \nSETTINGS \ntype = 'kafka', \nbrokers = 'kafka.demo-internal:9092', \ntopic = 'owlshop-frontend-events'\n```"
+    }
+  },
+  {
+    "id": "72755e70-6562-4d24-a96c-36668d8e8a96",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 6,
+      "nextX": 12,
+      "nextY": 6,
+      "w": 6,
+      "x": 6,
+      "y": 0
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "**ksqlDB**\n\n---\n\n```sql\nCREATE STREAM frontend_events (\n    version INT,\n    requestedUrl VARCHAR,\n    method VARCHAR,\n    correlationId VARCHAR,\n    ipAddress VARCHAR,\n    requestDuration INT,\n    response STRUCT<\n        size INT,\n        statusCode INT\n    >,\n    headers STRUCT<\n        accept VARCHAR,\n        acceptEncoding VARCHAR,\n        cacheControl VARCHAR,\n        origin VARCHAR,\n        referrer VARCHAR,\n        userAgent VARCHAR\n    >\n) WITH (\n    KAFKA_TOPIC='owlshop-frontend-event',\n    VALUE_FORMAT='JSON'\n)\n```"
+    }
+  },
+  {
+    "id": "9e053f3f-671b-42de-acb2-692dacfb8683",
+    "title": "show create ex_frontend_events",
+    "description": "",
+    "position": {
+      "h": 2,
+      "nextX": 6,
+      "nextY": 8,
+      "w": 6,
+      "x": 0,
+      "y": 6
+    },
+    "viz_type": "chart",
+    "viz_content": "show create ksql_alternative.frontend_events\n",
+    "viz_config": {
+      "chartType": "table",
+      "config": {
+        "rowCount": 5,
+        "tableStyles": {
+          "statement": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          }
+        },
+        "tableWrap": true,
+        "updateKey": "",
+        "updateMode": "all"
+      }
+    }
+  }
+]

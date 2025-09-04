@@ -1,0 +1,97 @@
+[
+  {
+    "id": "3703c565-d2f9-4ad7-b44f-6f4840ec856c",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 4,
+      "nextX": 6,
+      "nextY": 4,
+      "w": 6,
+      "x": 0,
+      "y": 0
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "**Timeplus**\n\n---\n\n```sql\nSELECT\n  ipAddress, -- select sepecific field\n  response['size'] as size,  -- access map field\n  extract(requestedUrl, 'https?://(?:www\\.)?([^/]+)') as domain -- extract with regex\nFROM\n  frontend_events\nWHERE\n  method = 'GET' -- filter \n-- default to unbounded push query\n```"
+    }
+  },
+  {
+    "id": "768f7bd4-ee71-432b-b37c-1d1e42143311",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 4,
+      "nextX": 12,
+      "nextY": 4,
+      "w": 6,
+      "x": 6,
+      "y": 0
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "**ksqlDB**\n\n---\n\n```sql\nSELECT\n  ipAddress, -- select sepecific field\n  response['size'] as size,  -- access map field\n  REGEXP_EXTRACT('https?://(?:www\\.)?([^/]+)', requestedUrl) as domain -- extract with regex\nFROM\n  frontend_events\nWHERE\n  method = 'GET' -- filter \nEMIT CHANGES -- push emit\n```"
+    }
+  },
+  {
+    "id": "55f6798b-3818-476c-8117-bb4f814b2f71",
+    "title": "Select Data",
+    "description": "",
+    "position": {
+      "h": 4,
+      "nextX": 6,
+      "nextY": 8,
+      "w": 6,
+      "x": 0,
+      "y": 4
+    },
+    "viz_type": "chart",
+    "viz_content": "SELECT\n  ipAddress, -- select sepecific field\n  response['size'] as size,  -- access map field\n  extract(requestedUrl, 'https?://(?:www\\.)?([^/]+)') as domain -- extract with regex\nFROM\n  ksql_alternative.frontend_events\nWHERE\n  method = 'GET' -- filter ",
+    "viz_config": {
+      "chartType": "table",
+      "config": {
+        "rowCount": 5,
+        "tableStyles": {
+          "domain": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "ipAddress": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "size": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          }
+        },
+        "tableWrap": false,
+        "updateKey": "",
+        "updateMode": "all"
+      }
+    }
+  }
+]

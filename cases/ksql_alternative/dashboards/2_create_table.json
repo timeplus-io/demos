@@ -1,0 +1,56 @@
+[
+  {
+    "id": "69168d79-b763-4645-a2f6-3bd4e3502e76",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 14,
+      "nextX": 6,
+      "nextY": 14,
+      "w": 6,
+      "x": 0,
+      "y": 0
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "**Timeplus**\n\n---\n\n```sql\nCREATE STREAM order_events (\n    version int,\n    id string,\n    createdAt string,\n    lastUpdatedAt string,\n    deliveredAt string,\n    completedAt string,\n    customer tuple (\n        version int,\n        id string,\n        firstName string,\n        lastName string,\n        gender string,\n        companyName nullable(string),\n        email string,\n        customerType string,\n        revision int\n    ),\n    orderValue int,\n    lineItems array(tuple(\n            articleId string,\n            name string,\n            quantity int,\n            quantityUnit string,\n            unitPrice int,\n            totalPrice int\n    )),\n    payment map(string,string),\n    deliveryAddress tuple(\n        version int,\n        id string,\n        customer tuple(\n            id string,\n            type string\n        ),\n        type string,\n        firstName string,\n        lastName string,\n        state string,\n        street string,\n        houseNumber string,\n        city string,\n        zip string,\n        latitude float64,\n        longitude float64,\n        phone string,\n        additionalAddressInfo string,\n        createdAt string,\n        revision int\n    ),\n    revision int\n)\nENGINE = ExternalStream \nSETTINGS \ntype = 'kafka', \nbrokers = 'kafka.demo-internal:9092', \ntopic = 'owlshop-orders'\n```"
+    }
+  },
+  {
+    "id": "85c89a00-337f-4216-b94b-e5ac5c913d42",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 14,
+      "nextX": 12,
+      "nextY": 14,
+      "w": 6,
+      "x": 6,
+      "y": 0
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "**ksqlDB**\n\n---\n\n```sql\nCREATE TABLE order_event_table (\n    version INT,\n    id VARCHAR PRIMARY KEY,\n    createdAt VARCHAR,\n    lastUpdatedAt VARCHAR,\n    deliveredAt VARCHAR,\n    completedAt VARCHAR,\n    customer STRUCT<\n        version INT,\n        id VARCHAR,\n        firstName VARCHAR,\n        lastName VARCHAR,\n        gender VARCHAR,\n        companyName VARCHAR,\n        email VARCHAR,\n        customerType VARCHAR,\n        revision INT\n    >,\n    orderValue INT,\n    lineItems ARRAY<\n        STRUCT<\n            articleId VARCHAR,\n            name VARCHAR,\n            quantity INT,\n            quantityUnit VARCHAR,\n            unitPrice INT,\n            totalPrice INT\n        >\n    >,\n    payment STRUCT<\n        paymentId VARCHAR,\n        method VARCHAR\n    >,\n    deliveryAddress STRUCT<\n        version INT,\n        id VARCHAR,\n        customer STRUCT<\n            id VARCHAR,\n            type VARCHAR\n        >,\n        type VARCHAR,\n        firstName VARCHAR,\n        lastName VARCHAR,\n        state VARCHAR,\n        street VARCHAR,\n        houseNumber VARCHAR,\n        city VARCHAR,\n        zip VARCHAR,\n        latitude DOUBLE,\n        longitude DOUBLE,\n        phone VARCHAR,\n        additionalAddressInfo VARCHAR,\n        createdAt VARCHAR,\n        revision INT\n    >,\n    revision INT\n) WITH (\n    KAFKA_TOPIC='owlshop-orders',\n    VALUE_FORMAT='JSON',\n    TIMESTAMP='createdAt'\n)\n```"
+    }
+  },
+  {
+    "id": "1fd7eb16-4682-4392-aa0e-38aa805fac31",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 14,
+      "nextX": 6,
+      "nextY": 28,
+      "w": 6,
+      "x": 0,
+      "y": 14
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "**Timeplus**\n\n---\n\nCreate a materailized view with versioned kv, where key is the order id\n\n\n```sql\n\nCREATE MUTABLE STREAM order_events_table\n(\n  `version` int32,\n  `id` string,\n  `createdAt` string,\n  `lastUpdatedAt` string,\n  `deliveredAt` string,\n  `completedAt` string,\n  `customer` tuple(\n        version int32, \n        id string, \n        firstName string, \n        lastName string, \n        gender string, \n        companyName nullable(string), \n        email string, \n        customerType string, \n        revision int32),\n  `orderValue` int32,\n  `lineItems` array(tuple(\n            articleId string,\n            name string,\n            quantity int,\n            quantityUnit string,\n            unitPrice int,\n            totalPrice int\n    )),\n  `payment` map(string, string),\n  `deliveryAddress` tuple(\n        version int32, \n        id string, \n        customer tuple(id string, type string), \n        type string, \n        firstName string, \n        lastName string, \n        state string, \n        street string, \n        houseNumber string, \n        city string, \n        zip string, \n        latitude float64, \n        longitude float64, \n        phone string, \n        additionalAddressInfo string, \n        createdAt string, \n        revision int32),\n  `revision` int32,\n)\nPRIMARY KEY id;\n\nCREATE MATERIALIZED VIEW mv_order_events_table \nINTO order_events_table\nAS\nSELECT\n  *\nFROM\n  order_events\n```"
+    }
+  }
+]

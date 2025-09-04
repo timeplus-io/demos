@@ -1,0 +1,119 @@
+[
+  {
+    "id": "e99c7f99-8b58-47a2-a4c4-674fb16b4a2d",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 4,
+      "nextX": 6,
+      "nextY": 4,
+      "w": 6,
+      "x": 0,
+      "y": 0
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "**Timeplus**\n\n---\n\n```sql\nCREATE MATERIALIZED VIEW mv_method_count_3s AS\nSELECT\n  window_start AS ts, window_end AS te, method, count(*) AS count\nFROM\n  tumble(frontend_events, 3s)\nGROUP BY\n  window_start, window_end, method\n```"
+    }
+  },
+  {
+    "id": "a5cae5c3-8a63-40e2-9752-91b26d947746",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 4,
+      "nextX": 12,
+      "nextY": 4,
+      "w": 6,
+      "x": 6,
+      "y": 0
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "**ksqlDB**\n\n---\n\n```sql\nCREATE TABLE mv_method_count_3s AS\nSELECT\n  method, count(*) AS count\nFROM\n  frontend_events WINDOW TUMBLING (SIZE 3 SECOND)\nGROUP BY\n  method\nEMIT CHANGES\n```"
+    }
+  },
+  {
+    "id": "a80cc321-d664-4e14-ba29-b882dfc89d67",
+    "title": "Query Materialized View",
+    "description": "",
+    "position": {
+      "h": 4,
+      "nextX": 6,
+      "nextY": 8,
+      "w": 6,
+      "x": 0,
+      "y": 4
+    },
+    "viz_type": "chart",
+    "viz_content": "select * from ksql_alternative.mv_method_count_3s",
+    "viz_config": {
+      "chartType": "table",
+      "config": {
+        "rowCount": 5,
+        "tableStyles": {
+          "_tp_time": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "count": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "method": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "te": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "ts": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          }
+        },
+        "tableWrap": false,
+        "updateKey": "",
+        "updateMode": "all"
+      }
+    }
+  }
+]
