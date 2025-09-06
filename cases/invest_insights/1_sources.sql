@@ -108,3 +108,13 @@ CREATE MUTABLE STREAM IF NOT EXISTS invest_insights.pre_value
   `SecurityAccount` string, `SecurityId` string, `prevalue` float64
 )
 PRIMARY KEY (SecurityAccount, SecurityId);
+
+
+-- update retention policy for streams
+ALTER STREAM invest_insights.exchange_order MODIFY SETTING
+logstore_retention_ms = '3600000',
+logstore_retention_bytes = '107374182';
+
+ALTER STREAM invest_insights.execution MODIFY SETTING
+logstore_retention_ms = '3600000',
+logstore_retention_bytes = '107374182';
