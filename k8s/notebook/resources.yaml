@@ -25,6 +25,15 @@ spec:
       labels:
         app: jupyter-notebook
     spec:
+      initContainers:
+      - name: fix-permissions
+        image: busybox
+        command: ['sh', '-c', 'chown -R 1000:100 /home/jovyan/work && chmod -R 755 /home/jovyan/work']
+        volumeMounts:
+        - name: jupyter-storage
+          mountPath: /home/jovyan/work
+        securityContext:
+          runAsUser: 0
       containers:
       - name: jupyter
         image: jupyter/base-notebook:latest
@@ -38,6 +47,9 @@ spec:
         volumeMounts:
         - name: jupyter-storage
           mountPath: /home/jovyan/work
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 100
       volumes:
       - name: jupyter-storage
         persistentVolumeClaim:
