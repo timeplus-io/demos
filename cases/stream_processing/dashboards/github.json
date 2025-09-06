@@ -1,0 +1,257 @@
+[
+  {
+    "id": "54c3740d-00f4-4280-a70c-36c11e41342d",
+    "title": "Hot Repos (By WatchEvent in last hour))",
+    "description": "",
+    "position": {
+      "h": 3,
+      "nextX": 12,
+      "nextY": 5,
+      "w": 6,
+      "x": 6,
+      "y": 2
+    },
+    "viz_type": "chart",
+    "viz_content": "SELECT repo, count(distinct actor) AS new_followers, emit_version()\nFROM stream_processing.github_events WHERE type ='WatchEvent' and _tp_time>now()-1h\nGROUP BY repo ORDER BY new_followers desc\nlimit 5 by emit_version()",
+    "viz_config": {
+      "chartType": "bar",
+      "config": {
+        "color": "repo",
+        "colors": [
+          "#27CCA8",
+          "#257966",
+          "#164C3F"
+        ],
+        "dataLabel": true,
+        "fractionDigits": 0,
+        "gridlines": true,
+        "groupType": "stack",
+        "intervalColor": "blue",
+        "legend": false,
+        "renderDuration": 60,
+        "renderInterval": 500,
+        "schema": "20230110",
+        "unit": {
+          "position": "right",
+          "value": ""
+        },
+        "updateKey": "emit_version()",
+        "updateMode": "time",
+        "xAxis": "repo",
+        "xRange": "1",
+        "xTickLabel": {
+          "maxChar": 40
+        },
+        "xTitle": "",
+        "yAxis": "new_followers",
+        "yRange": {
+          "max": null,
+          "min": null
+        },
+        "yTickLabel": {},
+        "yTitle": "",
+        "zAxis": ""
+      },
+      "schema": "20230110"
+    }
+  },
+  {
+    "id": "3c5115bb-4388-4d0a-9533-1277588e5041",
+    "title": "Total GitHub Events",
+    "description": "",
+    "position": {
+      "h": 3,
+      "nextX": 3,
+      "nextY": 5,
+      "w": 6,
+      "x": 0,
+      "y": 2
+    },
+    "viz_type": "chart",
+    "viz_content": "with old as(SELECT count(*) as c FROM table(stream_processing.github_events)),\nnew as (SELECT count(*) as c FROM stream_processing.github_events)\nselect old.c+new.c as count from new,old",
+    "viz_config": {
+      "chartType": "singleValue",
+      "config": {
+        "color": "blue",
+        "decreaseColor": "red",
+        "delta": true,
+        "fontSize": 64,
+        "fractionDigits": 0,
+        "increaseColor": "green",
+        "sparkline": true,
+        "sparklineColor": "blue",
+        "unit": {
+          "position": "right",
+          "value": ""
+        },
+        "value": "count"
+      }
+    }
+  },
+  {
+    "id": "9c5af999-92b0-4747-8d5f-995ad9894b6e",
+    "title": "Hot repos (by PushEvent last 10 mins))",
+    "description": "",
+    "position": {
+      "h": 3,
+      "nextX": 12,
+      "nextY": 8,
+      "w": 6,
+      "x": 6,
+      "y": 5
+    },
+    "viz_type": "chart",
+    "viz_content": "SELECT repo, count() AS pushCount,emit_version()\nFROM stream_processing.github_events WHERE type ='PushEvent' and _tp_time>now()-10m\nGROUP BY repo ORDER BY pushCount desc\nlimit 5 by emit_version()",
+    "viz_config": {
+      "chartType": "bar",
+      "config": {
+        "color": "repo",
+        "colors": [
+          "#27CCA8",
+          "#257966",
+          "#164C3F"
+        ],
+        "dataLabel": true,
+        "direction": "vertical",
+        "fractionDigits": 0,
+        "gridlines": true,
+        "groupType": "stack",
+        "intervalColor": "",
+        "legend": false,
+        "renderDuration": 60,
+        "renderInterval": 500,
+        "schema": "20230110",
+        "unit": {
+          "position": "right",
+          "value": ""
+        },
+        "updateKey": "emit_version()",
+        "updateMode": "time",
+        "xAxis": "repo",
+        "xTickLabel": {
+          "maxChar": 40
+        },
+        "xTitle": "",
+        "yAxis": "pushCount",
+        "yTickLabel": {},
+        "yTitle": "",
+        "zAxis": ""
+      },
+      "schema": "20230110"
+    }
+  },
+  {
+    "id": "0059e65f-9600-4f45-92d7-aa6ba7915ad7",
+    "title": "Recent Events",
+    "description": "",
+    "position": {
+      "h": 4,
+      "nextX": 12,
+      "nextY": 12,
+      "w": 12,
+      "x": 0,
+      "y": 8
+    },
+    "viz_type": "chart",
+    "viz_content": "SELECT created_at,actor,type,repo FROM stream_processing.github_events",
+    "viz_config": {
+      "chartType": "table",
+      "config": {
+        "renderDuration": 60,
+        "renderInterval": 500,
+        "rowCount": "20",
+        "tableLayout": [
+          {
+            "width": 160
+          },
+          {
+            "width": 160
+          },
+          {
+            "width": 160
+          },
+          {
+            "width": 160
+          }
+        ],
+        "tableStyles": {
+          "actor": {
+            "conditions": [],
+            "width": 219
+          },
+          "created_at": {
+            "conditions": [],
+            "width": 201
+          },
+          "repo": {
+            "conditions": [],
+            "width": 378
+          },
+          "type": {
+            "conditions": [],
+            "width": 160
+          }
+        },
+        "updateKey": "created_at",
+        "updateMode": "all"
+      },
+      "schema": "20230110"
+    }
+  },
+  {
+    "id": "09ecd0cd-7054-4358-82ca-8888843386ff",
+    "title": "Event count by types last hour",
+    "description": "",
+    "position": {
+      "h": 3,
+      "nextX": 6,
+      "nextY": 8,
+      "w": 6,
+      "x": 0,
+      "y": 5
+    },
+    "viz_type": "chart",
+    "viz_content": "SELECT type, count(*) AS cnt,emit_version() FROM stream_processing.github_events WHERE _tp_time>now()-1h GROUP BY type ORDER BY cnt DESC limit 5 by emit_version() ",
+    "viz_config": {
+      "chartType": "bar",
+      "config": {
+        "color": "type",
+        "colors": [
+          "#27CCA8",
+          "#257966",
+          "#164C3F"
+        ],
+        "dataLabel": true,
+        "fractionDigits": 0,
+        "gridlines": true,
+        "groupType": "stack",
+        "intervalColor": "blue",
+        "legend": false,
+        "renderDuration": 60,
+        "renderInterval": 500,
+        "schema": "20230110",
+        "unit": {
+          "position": "right",
+          "value": ""
+        },
+        "updateKey": "emit_version()",
+        "updateMode": "time",
+        "xAxis": "type",
+        "xRange": "1",
+        "xTickLabel": {
+          "maxChar": 20
+        },
+        "xTitle": "",
+        "yAxis": "cnt",
+        "yRange": {
+          "max": null,
+          "min": null
+        },
+        "yTickLabel": {},
+        "yTitle": "",
+        "zAxis": ""
+      },
+      "schema": "20230110"
+    }
+  }
+]

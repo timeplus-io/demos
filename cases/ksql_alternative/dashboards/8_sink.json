@@ -1,0 +1,38 @@
+[
+  {
+    "id": "06872006-0b10-4ae8-93ca-422b00324277",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 7,
+      "nextX": 6,
+      "nextY": 7,
+      "w": 6,
+      "x": 0,
+      "y": 0
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "**Timeplus**\n\nTimeplus can send data to Apache Kafka topics, or ClickHouse tables.\n\n---\n\n```sql\nCREATE EXTERNAL TABLE target_table\nSETTINGS type='clickhouse',\n         address='localhost:9000',\n         table='target_table'\n\nINSERT INTO target_table\nSELECT\n  window_start, method, count(*) AS count\nFROM\n  tumble(frontend_events, 3s)\nGROUP BY\n  window_start, method\n```"
+    }
+  },
+  {
+    "id": "8dd55f67-06a6-41e0-8a84-a7ea57c1ce39",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 7,
+      "nextX": 12,
+      "nextY": 7,
+      "w": 6,
+      "x": 6,
+      "y": 0
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "**ksqlDB**\n\nksqlDB leverage Kafka Connect to send data to other systems.\n\n---\n\n```sql\nCREATE STREAM target_stream (\n    method VARCHAR,\n    count INT\n) WITH (\n    KAFKA_TOPIC='target_topic',\n    VALUE_FORMAT='JSON'\n)\n\nINSERT INTO target_stream\nSELECT\n  method, count(*) AS count\nFROM\n  frontend_events WINDOW TUMBLING (SIZE 3 SECOND)\nGROUP BY\n  method\nEMIT CHANGES\n\nCREATE SOURCE CONNECTOR clickhousejdbcconnector WITH (\n    'connector.class'='io.confluent.connect.jdbc.JdbcSinkConnector',\n    'topics'='target_topic',\n    'tasks.max'='1',\n    'connection.url'='jdbc:clickhouse://clickhouse:8123/default',\n    'table.name.format'='target_table'\n);\n```"
+    }
+  }
+]

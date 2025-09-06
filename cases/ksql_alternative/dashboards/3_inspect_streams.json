@@ -1,0 +1,214 @@
+[
+  {
+    "id": "7008c711-0fa4-4baf-8638-014fbffdb1bc",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 2,
+      "nextX": 6,
+      "nextY": 2,
+      "w": 6,
+      "x": 0,
+      "y": 0
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "**Timeplus**\n\n---\n\n```sql\nSHOW STREAMS\n```"
+    }
+  },
+  {
+    "id": "23205324-5307-4f6c-9bba-cf57d90e66ed",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 5,
+      "nextX": 12,
+      "nextY": 5,
+      "w": 6,
+      "x": 6,
+      "y": 0
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "**ksqlDB**\n\n---\n\n```sql\nSHOW STREAMS\n```"
+    }
+  },
+  {
+    "id": "33686268-7253-4127-bb13-5608dc649a61",
+    "title": "SHOW STREAMS",
+    "description": "",
+    "position": {
+      "h": 3,
+      "nextX": 6,
+      "nextY": 5,
+      "w": 6,
+      "x": 0,
+      "y": 2
+    },
+    "viz_type": "chart",
+    "viz_content": "SHOW STREAMS\n",
+    "viz_config": {
+      "chartType": "table",
+      "config": {
+        "rowCount": 5,
+        "tableStyles": {
+          "name": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          }
+        },
+        "tableWrap": false,
+        "updateKey": "",
+        "updateMode": "all"
+      }
+    }
+  },
+  {
+    "id": "8fec8d35-63f7-4d96-8446-67a3ac82946b",
+    "title": "DESCRIBE frontend_events",
+    "description": "",
+    "position": {
+      "h": 3,
+      "nextX": 6,
+      "nextY": 10,
+      "w": 6,
+      "x": 0,
+      "y": 7
+    },
+    "viz_type": "chart",
+    "viz_content": "DESCRIBE ksql_alternative.frontend_events",
+    "viz_config": {
+      "chartType": "table",
+      "config": {
+        "rowCount": 5,
+        "tableStyles": {
+          "codec_expression": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "comment": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "default_expression": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "default_type": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "name": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "ttl_expression": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "type": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          }
+        },
+        "tableWrap": false,
+        "updateKey": "",
+        "updateMode": "all"
+      }
+    }
+  },
+  {
+    "id": "6e4ee4bc-c0d2-487c-bcf5-a248cb065e36",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 2,
+      "nextX": 12,
+      "nextY": 7,
+      "w": 6,
+      "x": 6,
+      "y": 5
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "**ksqlDB**\n\n--- \n\n```sql\nDESCRIBE stream_name\n```"
+    }
+  },
+  {
+    "id": "757c4e9a-1b9b-4ecc-aaa0-49188f576699",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 2,
+      "nextX": 6,
+      "nextY": 7,
+      "w": 6,
+      "x": 0,
+      "y": 5
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "**Timeplus**\n\n--- \n\n```sql\nDESCRIBE stream_name\n```"
+    }
+  }
+]

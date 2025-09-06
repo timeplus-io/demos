@@ -1,0 +1,75 @@
+Player Actions Stream (player_actions)
+{
+  "user_id": "usr_123456789",
+  "session_id": "sess_abc123",
+  "timestamp": "2025-09-05T14:30:15.123Z",
+  "event_type": "match_end",
+  "game_mode": "battle_royale",
+  "match_id": "match_789",
+  "event_data": {
+    "placement": 3,
+    "kills": 7,
+    "damage_dealt": 1450,
+    "survival_time": 1200,
+    "items_used": ["med_kit", "shield_potion"],
+    "location_final": {"x": 245.7, "y": 389.2}
+  },
+  "device_info": {
+    "platform": "mobile_ios",xs
+    "device_model": "iPhone_14_Pro",
+    "os_version": "iOS_16.5",
+    "app_version": "2.4.1"
+  }
+}
+Transaction Events Stream (transactions)
+{
+  "transaction_id": "txn_987654321",
+  "user_id": "usr_123456789",
+  "session_id": "sess_abc123", 
+  "timestamp": "2025-09-05T14:25:30.456Z",
+  "transaction_type": "iap_purchase",
+  "item_category": "cosmetic",
+  "item_id": "skin_legendary_dragon",
+  "amount_usd": 19.99,
+  "currency_type": "real_money",
+  "payment_method": "apple_pay",
+  "location": {
+    "country": "US",
+    "region": "California", 
+    "city": "San Francisco",
+    "latitude": 37.7749,
+    "longitude": -122.4194
+  },
+  "device_fingerprint": "fp_a1b2c3d4e5"
+}
+Social Interactions Stream (social_events)
+{
+  "user_id": "usr_123456789",
+  "timestamp": "2025-09-05T14:28:45.789Z",
+  "interaction_type": "friend_request",
+  "target_user_id": "usr_987654321",
+  "context": "post_match",
+  "additional_data": {
+    "match_id": "match_789",
+    "message": "Good game! Want to team up?"
+  }
+}
+Performance Metrics Stream (performance_metrics)
+{
+  "user_id": "usr_123456789",
+  "session_id": "sess_abc123",
+  "timestamp": "2025-09-05T14:30:00.000Z",
+  "device_stats": {
+    "fps_avg": 58.3,
+    "fps_min": 42,
+    "memory_usage_mb": 2048,
+    "battery_level": 67,
+    "network_latency_ms": 45,
+    "packet_loss_pct": 0.2
+  },
+  "game_stats": {
+    "load_time_ms": 3200,
+    "crash_occurred": false,
+    "error_count": 0
+  }
+}

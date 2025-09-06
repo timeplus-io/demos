@@ -1,0 +1,198 @@
+[
+  {
+    "id": "e7aa3613-eb16-486b-92aa-7754ea58698a",
+    "title": "Standard deviation",
+    "description": "",
+    "position": {
+      "h": 7,
+      "nextX": 6,
+      "nextY": 7,
+      "w": 6,
+      "x": 0,
+      "y": 0
+    },
+    "viz_type": "chart",
+    "viz_content": "SELECT * FROM stream_processing.v_CreateVisualization",
+    "viz_config": {
+      "chartType": "line",
+      "config": {
+        "color": "key",
+        "colors": [
+          "#ED64A6",
+          "#F0BE3E",
+          "#DA4B36",
+          "#9A1563",
+          "#FF4A71",
+          "#D12D50",
+          "#8934D9",
+          "#D53F8C",
+          "#F7775A",
+          "#8934D9"
+        ],
+        "dataLabel": true,
+        "fractionDigits": 2,
+        "gridlines": true,
+        "legend": true,
+        "lineStyle": "curve",
+        "points": true,
+        "showAll": false,
+        "unit": {
+          "position": "left",
+          "value": ""
+        },
+        "xAxis": "window_end",
+        "xFormat": "",
+        "xRange": "Infinity",
+        "xTitle": "",
+        "yAxis": "value",
+        "yRange": {
+          "max": null,
+          "min": null
+        },
+        "yTickLabel": {
+          "maxChar": 25
+        },
+        "yTitle": ""
+      }
+    }
+  },
+  {
+    "id": "73fef9e2-506c-4387-a858-b087e3f90f63",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 1,
+      "nextX": 9,
+      "nextY": 5,
+      "w": 3,
+      "x": 6,
+      "y": 4
+    },
+    "viz_type": "control",
+    "viz_content": "",
+    "viz_config": {
+      "chartType": "selector",
+      "defaultValue": "1s",
+      "inlineValues": "1s,5s,15s,30s",
+      "label": "KPI Interval",
+      "labelWidth": "60",
+      "target": "awarenessThreshold"
+    }
+  },
+  {
+    "id": "e9036051-f6ef-4a02-8898-12513fc943be",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 1,
+      "nextX": 12,
+      "nextY": 5,
+      "w": 3,
+      "x": 9,
+      "y": 4
+    },
+    "viz_type": "control",
+    "viz_content": "",
+    "viz_config": {
+      "chartType": "selector",
+      "defaultValue": "5s",
+      "inlineValues": "5s,10s,15s,30s,1m",
+      "label": "Up/Low Band Interval",
+      "labelWidth": "70",
+      "target": "limitWindow"
+    }
+  },
+  {
+    "id": "c8ddc2c6-3eb5-4bd6-83e0-7d86d4d81780",
+    "title": "Standard deviation with query variables",
+    "description": "",
+    "position": {
+      "h": 4,
+      "nextX": 12,
+      "nextY": 4,
+      "w": 6,
+      "x": 6,
+      "y": 0
+    },
+    "viz_type": "chart",
+    "viz_content": "WITH parseddata AS (\n    SELECT \n        _tp_time,\n        raw:requestDuration::float AS requestDuration\n    FROM stream_processing.eventstream\n), stdev AS (\n    SELECT window_end,\n        group_array(requestDuration) AS X, array_avg(X) AS mean,\n        sqrt(array_avg(array_map(x-> (x-mean)*(x-mean) , X ))) AS std,\n        latest(_tp_time) AS latestTime\n    FROM tumble(parseddata,{{limitWindow}})\n    GROUP BY window_end\n), bands AS (\n    SELECT window_end, latestTime,\n        mean + 2 * std AS hiBand,\n        mean - 2 * std AS loBand\n    FROM stdev\n), average AS (\n    SELECT window_end, avg(requestDuration) AS latestDuration\n    FROM tumble(parseddata,{{awarenessThreshold}}) \n    GROUP BY window_end\n) \nSELECT window_end, latestDuration AS value, 'livedata' AS key FROM average\nUNION ALL\nSELECT window_end, hiBand AS value, 'hiBand' as key FROM bands\nUNION ALL\nSELECT window_end, loBand AS value, 'loBand' as key FROM bands\n",
+    "viz_config": {
+      "chartType": "line",
+      "config": {
+        "color": "key",
+        "colors": [
+          "#ED64A6",
+          "#F0BE3E",
+          "#DA4B36",
+          "#9A1563",
+          "#FF4A71",
+          "#D12D50",
+          "#8934D9",
+          "#D53F8C",
+          "#F7775A",
+          "#8934D9"
+        ],
+        "dataLabel": true,
+        "fractionDigits": 1,
+        "gridlines": true,
+        "legend": true,
+        "lineStyle": "curve",
+        "points": true,
+        "showAll": false,
+        "unit": {
+          "position": "left",
+          "value": ""
+        },
+        "xAxis": "window_end",
+        "xFormat": "HH:mm:ss",
+        "xRange": "Infinity",
+        "xTitle": "",
+        "yAxis": "value",
+        "yRange": {
+          "max": null,
+          "min": null
+        },
+        "yTickLabel": {
+          "maxChar": 25
+        },
+        "yTitle": ""
+      }
+    }
+  },
+  {
+    "id": "3991bb87-fc34-4859-b821-c5409d7c4cc3",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 2,
+      "nextX": 12,
+      "nextY": 9,
+      "w": 12,
+      "x": 0,
+      "y": 7
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "This SQL behind the 👆 chart is \n\"`SELECT * FROM stream_processing.v_CreateVisualization`\"\n\n\"`v_CreateVisualization`\" is a view to combine 3 streaming queries:\n* the middle line is the live KPI. We are using \"`select avg(requestDuration) from tumble(stream, 1s) ..`\" to get the average value for every second.\n* the upper line is the high band, with mean+2*stdev\n* the lower line is the low band, with mean-2*stdev\n\nWhile \"`stdev`\" is the standard deviation\n\n\"`group_array(requestDuration) AS X, \n   array_avg(X) AS mean, \n   sqrt(array_avg(array_map(x -> ((x - mean) * (x - mean)), X))) AS std`\""
+    }
+  },
+  {
+    "id": "e5ede250-4107-4f21-b2f3-0d977a9cbaf8",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 2,
+      "nextX": 12,
+      "nextY": 7,
+      "w": 6,
+      "x": 6,
+      "y": 5
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "You can add drop-down or input box in Timeplus dashboards. Those are the query variables, which are defined in the SQL. When you change the query variable, Timeplus will rerun the SQL with new value."
+    }
+  }
+]

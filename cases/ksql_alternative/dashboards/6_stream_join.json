@@ -1,0 +1,561 @@
+[
+  {
+    "id": "417b8953-f1cd-45d9-af8b-22626636ffe9",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 3,
+      "nextX": 6,
+      "nextY": 3,
+      "w": 6,
+      "x": 0,
+      "y": 0
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "**Timeplus**\n\n⚠️ Full inner join of two streams is supported, but not recommended.\n\n---\n\n```sql\nSELECT\n  c.cid, c.latitude, c.longitude, c.speed_kmh, b.bid\nFROM\n  car_live_data AS c\nINNER JOIN bookings AS b ON c.cid = b.cid\n\n```"
+    }
+  },
+  {
+    "id": "8eeefa6e-3e89-4ccd-af8c-f3b9e0c7be9e",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 3,
+      "nextX": 12,
+      "nextY": 3,
+      "w": 6,
+      "x": 6,
+      "y": 0
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "**ksqlDB**\n\n❌ Full inner join of two streams is not supported\n\n---\n\n```sql\n\n```"
+    }
+  },
+  {
+    "id": "a6a8a2fb-33eb-4b35-bb54-d1901849ac50",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 4,
+      "nextX": 6,
+      "nextY": 12,
+      "w": 6,
+      "x": 0,
+      "y": 8
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "**Timeplus**\n\n✅ Range join is recommended. Users can assign timestamp at query time.\n\n---\n\n```sql\nSELECT\n  c.cid, c.latitude, c.longitude, c.speed_kmh, b.bid\nFROM\n  car_live_data AS c\nINNER JOIN bookings AS b ON (c.cid = b.cid) \nAND date_diff_within(10s, to_time(c.time), to_time(b.time))\n```"
+    }
+  },
+  {
+    "id": "0a1432c2-8e49-4847-8976-e52e35bde328",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 8,
+      "nextX": 12,
+      "nextY": 16,
+      "w": 6,
+      "x": 6,
+      "y": 8
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "**ksqlDB**\n\n⚠️ Range join is supported.  The timestamp has to be assigned to the stream during stream creation.\n\n---\n\n```sql\nSELECT\n  c.cid, c.latitude, c.longitude, c.speed_kmh, b.bid\nFROM\n  car_live_data AS c\nJOIN bookings AS b WITHIN 10 SECONDS\nON c.cid = b.cid  \nEMIT CHANGES\n```"
+    }
+  },
+  {
+    "id": "2bb8a428-88e3-4968-82c9-3040a989f8b5",
+    "title": "Range join two streams",
+    "description": "",
+    "position": {
+      "h": 4,
+      "nextX": 6,
+      "nextY": 16,
+      "w": 6,
+      "x": 0,
+      "y": 12
+    },
+    "viz_type": "chart",
+    "viz_content": "SELECT\n  c.cid, c.latitude, c.longitude, c.speed_kmh, b.bid\nFROM\n  ksql_alternative.car_live_data AS c\nINNER JOIN ksql_alternative.bookings AS b ON (c.cid = b.cid) \nAND date_diff_within(10s, to_time(c.time), to_time(b.time))",
+    "viz_config": {
+      "chartType": "table",
+      "config": {
+        "rowCount": 5,
+        "tableStyles": {
+          "bid": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "cid": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "latitude": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "longitude": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "speed_kmh": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          }
+        },
+        "tableWrap": false,
+        "updateKey": "",
+        "updateMode": "all"
+      }
+    }
+  },
+  {
+    "id": "91079fe9-1654-4591-9759-be79d9afd2ea",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 3,
+      "nextX": 6,
+      "nextY": 19,
+      "w": 6,
+      "x": 0,
+      "y": 16
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "**Timeplus**\n\n✅ Asof join is a better solution in this case.\n\n---\n\n```sql\nSELECT\n  c.cid, c.latitude, c.longitude, c.speed_kmh, b.bid\nFROM\n  car_live_data AS c\nASOF JOIN bookings AS b ON (c.cid = b.cid) \nAND to_time(c.time) >= to_time(b.time)\n```"
+    }
+  },
+  {
+    "id": "2a903534-6069-4017-ad07-315385bb3543",
+    "title": "ASOF join two streams",
+    "description": "",
+    "position": {
+      "h": 4,
+      "nextX": 6,
+      "nextY": 23,
+      "w": 6,
+      "x": 0,
+      "y": 19
+    },
+    "viz_type": "chart",
+    "viz_content": "SELECT\n  c.cid, c.latitude, c.longitude, c.speed_kmh, b.bid\nFROM\n  ksql_alternative.car_live_data AS c\nASOF JOIN ksql_alternative.bookings AS b ON (c.cid = b.cid) \nAND to_time(c.time) >= to_time(b.time)",
+    "viz_config": {
+      "chartType": "table",
+      "config": {
+        "rowCount": 5,
+        "tableStyles": {
+          "bid": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "cid": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "latitude": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "longitude": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "speed_kmh": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          }
+        },
+        "tableWrap": false,
+        "updateKey": "",
+        "updateMode": "all"
+      }
+    }
+  },
+  {
+    "id": "06e67dfb-88c2-4a20-8e66-6ae1979e8d2c",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 3,
+      "nextX": 12,
+      "nextY": 19,
+      "w": 6,
+      "x": 6,
+      "y": 16
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "**ksqlDB**\n\n❌ Asof join not supported\n\n"
+    }
+  },
+  {
+    "id": "99daef29-f6b6-4689-b130-6b4523498561",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 2,
+      "nextX": 6,
+      "nextY": 5,
+      "w": 6,
+      "x": 0,
+      "y": 3
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "**Timeplus**\n\n✅ Self join is supported.\n\n---\n\n```sql\nSELECT * FROM car_live_data AS a JOIN car_live_data AS b \nON a.cid=b.cid LIMIT 3\n\n```\n"
+    }
+  },
+  {
+    "id": "338c45d4-c9fa-4816-baa6-6606ae8f7b60",
+    "title": "Self Join",
+    "description": "",
+    "position": {
+      "h": 3,
+      "nextX": 6,
+      "nextY": 8,
+      "w": 6,
+      "x": 0,
+      "y": 5
+    },
+    "viz_type": "chart",
+    "viz_content": "SELECT * FROM ksql_alternative.car_live_data AS a JOIN ksql_alternative.car_live_data AS b \nON a.cid=b.cid LIMIT 3",
+    "viz_config": {
+      "chartType": "table",
+      "config": {
+        "rowCount": 5,
+        "tableStyles": {
+          "b": {
+            "cid": {
+              "conditions": []
+            },
+            "gas_percent": {
+              "conditions": []
+            },
+            "in_use": {
+              "conditions": []
+            },
+            "latitude": {
+              "conditions": []
+            },
+            "locked": {
+              "conditions": []
+            },
+            "longitude": {
+              "conditions": []
+            },
+            "speed_kmh": {
+              "conditions": []
+            },
+            "time": {
+              "conditions": []
+            },
+            "total_km": {
+              "conditions": []
+            }
+          },
+          "b.cid": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "b.gas_percent": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "b.in_use": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "b.latitude": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "b.locked": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "b.longitude": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "b.speed_kmh": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "b.time": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "b.total_km": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "cid": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "gas_percent": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "in_use": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "latitude": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "locked": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "longitude": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "speed_kmh": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "time": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "total_km": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          }
+        },
+        "tableWrap": false,
+        "updateKey": "",
+        "updateMode": "all"
+      }
+    }
+  },
+  {
+    "id": "e8ef782d-d86e-4437-b86b-63bf93d367c3",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 5,
+      "nextX": 12,
+      "nextY": 8,
+      "w": 6,
+      "x": 6,
+      "y": 3
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "**ksqlDB**\n\n❌ Self join is not supported."
+    }
+  }
+]

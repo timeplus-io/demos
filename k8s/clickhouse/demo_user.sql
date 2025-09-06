@@ -9,3 +9,6 @@ SHOW USERS;
 
 -- Check permissions
 SHOW GRANTS FOR demo;
+
+REVOKE ALL ON system.* FROM demo;
+REVOKE ALL ON default.* FROM demo;

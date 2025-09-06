@@ -1,0 +1,192 @@
+[
+  {
+    "id": "9721317f-04df-4098-8522-9869408c0a79",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 3,
+      "nextX": 6,
+      "nextY": 3,
+      "w": 6,
+      "x": 0,
+      "y": 0
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "**Timeplus**\n\n---\n\n```sql\nSELECT\n  method, count(*) AS count\nFROM\n  frontend_events\nGROUP BY\n  method\n```"
+    }
+  },
+  {
+    "id": "892ebe42-f7dc-49bc-a055-da6e903ee2ca",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 6,
+      "nextX": 12,
+      "nextY": 6,
+      "w": 6,
+      "x": 6,
+      "y": 0
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "**ksqlDB**\n\n---\n\n```sql\nSELECT\n  method, count(*) AS count\nFROM\n  frontend_events\nGROUP BY\n  method\nEMIT CHANGES;\n```"
+    }
+  },
+  {
+    "id": "bf305e17-621d-44be-95c3-699b94258312",
+    "title": "Global Aggregation",
+    "description": "",
+    "position": {
+      "h": 3,
+      "nextX": 6,
+      "nextY": 6,
+      "w": 6,
+      "x": 0,
+      "y": 3
+    },
+    "viz_type": "chart",
+    "viz_content": "SELECT\n  method, count(*) AS count\nFROM\n  ksql_alternative.frontend_events\nGROUP BY\n  method",
+    "viz_config": {
+      "chartType": "table",
+      "config": {
+        "rowCount": 5,
+        "tableStyles": {
+          "count": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "method": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          }
+        },
+        "tableWrap": false,
+        "updateKey": "",
+        "updateMode": "all"
+      }
+    }
+  },
+  {
+    "id": "5b7b30fb-8b75-44db-9e11-c877d796e27e",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 3,
+      "nextX": 6,
+      "nextY": 9,
+      "w": 6,
+      "x": 0,
+      "y": 6
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "**Timeplus**\n\n---\n\n```sql\nSELECT\n  window_start, window_end, method, count(*) AS count\nFROM\n  tumble(frontend_events, 3s)\nGROUP BY\n  window_start, window_end,method\n```"
+    }
+  },
+  {
+    "id": "8b56f9b2-bf8d-4e3f-9b3e-88559b3df918",
+    "title": "new panel",
+    "description": "",
+    "position": {
+      "h": 3,
+      "nextX": 12,
+      "nextY": 9,
+      "w": 6,
+      "x": 6,
+      "y": 6
+    },
+    "viz_type": "markdown",
+    "viz_content": "",
+    "viz_config": {
+      "mdString": "**ksqlDB**\n\n---\n\n```sql\nSELECT\n  window_start, window_end, method, count(*) AS count\nFROM\n  frontend_events WINDOW TUMBLING (SIZE 3 SECOND)\nGROUP BY\n  method\nEMIT CHANGES\n```"
+    }
+  },
+  {
+    "id": "2790a8e0-98e1-4017-af52-ba4d4f204800",
+    "title": "Window Aggregation (Tumble)",
+    "description": "",
+    "position": {
+      "h": 4,
+      "nextX": 6,
+      "nextY": 13,
+      "w": 6,
+      "x": 0,
+      "y": 9
+    },
+    "viz_type": "chart",
+    "viz_content": "SELECT\n  window_start, window_end, method, count(*) AS count\nFROM\n  tumble(ksql_alternative.frontend_events, 3s)\nGROUP BY\n  window_start, window_end,method",
+    "viz_config": {
+      "chartType": "table",
+      "config": {
+        "rowCount": 5,
+        "tableStyles": {
+          "count": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "method": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "window_end": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          },
+          "window_start": {
+            "conditions": [],
+            "decreaseColor": "red",
+            "highlightRow": false,
+            "increaseColor": "green",
+            "miniChartType": "",
+            "name": "",
+            "show": true,
+            "trend": false,
+            "width": 165
+          }
+        },
+        "tableWrap": false,
+        "updateKey": "",
+        "updateMode": "all"
+      }
+    }
+  }
+]
