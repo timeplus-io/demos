@@ -15,7 +15,7 @@ Player Actions Stream (player_actions)
     "location_final": {"x": 245.7, "y": 389.2}
   },
   "device_info": {
-    "platform": "mobile_ios",
+    "platform": "mobile_ios",xs
     "device_model": "iPhone_14_Pro",
     "os_version": "iOS_16.5",
     "app_version": "2.4.1"

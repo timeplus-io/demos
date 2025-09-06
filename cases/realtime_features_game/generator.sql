@@ -36,6 +36,7 @@ CREATE RANDOM STREAM game_source.player_actions
         '\"kills\":', to_string(multi_if(event_type IN ('player_elimination', 'match_end'), rand_poisson(2), 0)), ',',
         '\"damage_dealt\":', to_string(multi_if(event_type IN ('player_elimination', 'match_end'), to_int32(exp(rand_normal(6.5, 1.2))), 0)), ',',
         '\"survival_time\":', to_string(multi_if(event_type = 'match_end', to_int32(rand_uniform(300, 1200)), 0)), ',',
+        '\"result\":"', to_string(multi_if(event_type = 'match_end',array_element(['win', 'loss'], (rand() % 2) + 1) , 'na')), '\",',
         '\"items_used\":[\"', array_element(['med_kit', 'shield_potion', 'grenade', 'smoke_bomb', 'bandages', ''], (rand() % 6) + 1), '\",\"', array_element(['med_kit', 'shield_potion', 'grenade', ''], (rand() % 4) + 1), '\"],',
         '\"location_final\":{',
             '\"x\":', to_string(round(rand_uniform(0, 1500), 2)), ',',
