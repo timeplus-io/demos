@@ -1,5 +1,5 @@
 -- total first, and lastgame played, 
-CREATE MATERIALIZED VIEW gamg.mv_user_game_stats_feature AS
+CREATE MATERIALIZED VIEW game.mv_user_game_stats_feature AS
 SELECT
   user_id, 
   count_distinct(match_id) AS total_game_played,
@@ -14,7 +14,7 @@ GROUP BY
 settings seek_to = 'earliest';
 
 -- total elimination count, distinct game played
-CREATE MATERIALIZED VIEW gamg.mv_user_elimination_stats_feature AS
+CREATE MATERIALIZED VIEW game.mv_user_elimination_stats_feature AS
 SELECT 
     user_id, 
     count_if(event_type = 'player_elimination') AS total_elimination_count,
@@ -26,7 +26,7 @@ settings seek_to = 'earliest';
 
 -- Performance by Game Mode
 -- “Does the user’s FPS drop in battle_royale vs team_deathmatch?”
-CREATE MATERIALIZED VIEW gamg.mv_user_technical_performance_feature AS
+CREATE MATERIALIZED VIEW game.mv_user_technical_performance_feature AS
 SELECT
     pa.user_id,
     pa.game_mode,
@@ -40,7 +40,7 @@ GROUP BY pa.user_id, pa.game_mode
 settings seek_to = 'earliest';
 
 -- Session Length vs Performance Degradation
-CREATE MATERIALIZED VIEW gamg.mv_user_battery_and_session_feature AS
+CREATE MATERIALIZED VIEW game.mv_user_battery_and_session_feature AS
 SELECT
     pa.user_id,
     avg(pm.device_stats:battery_level::float) AS avg_battery_level,
@@ -53,7 +53,7 @@ GROUP BY pa.user_id
 settings seek_to = 'earliest';
 
 -- “Does network latency spike when the user eliminates or gets eliminated?”
-CREATE MATERIALIZED VIEW gamg.mv_user_latency_by_event_feature AS
+CREATE MATERIALIZED VIEW game.mv_user_latency_by_event_feature AS
 SELECT
   pa.user_id, 
   avg_if(pm.device_stats:network_latency_ms::float, pa.event_type = 'player_elimination') AS avg_latency_during_elim, 
