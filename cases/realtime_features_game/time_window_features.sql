@@ -67,5 +67,6 @@ FROM hop(game.transactions, 1h, 1d) t
 LEFT JOIN hop(game.social_events, 1h, 1d) s 
     ON t.user_id = s.user_id 
     AND t.window_start = s.window_start
+    AND date_diff_within(2m, t.window_start, s.window_start)  -- ensure events are within the same time window
 GROUP BY t.user_id, t.window_start, t.window_end
 settings seek_to = 'earliest'

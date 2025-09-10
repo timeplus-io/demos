@@ -27,4 +27,5 @@ select
         else false 
     end as all_five_lost
 from game.player_actions
+where event_type = 'match_end'
 group by user_id

@@ -36,6 +36,7 @@ FROM game.player_actions pa
 JOIN game.performance_metrics pm
   ON pa.user_id = pm.user_id
  AND pa.session_id = pm.session_id
+ AND date_diff_within(2m) -- add time difference condition to join
 GROUP BY pa.user_id, pa.game_mode
 settings seek_to = 'earliest';
 
@@ -49,6 +50,7 @@ FROM game.player_actions pa
 JOIN game.performance_metrics pm
   ON pa.user_id = pm.user_id
  AND pa.session_id = pm.session_id
+ AND date_diff_within(2m)
 GROUP BY pa.user_id
 settings seek_to = 'earliest';
 
@@ -61,7 +63,10 @@ SELECT
   avg(pm.device_stats:network_latency_ms::float) AS avg_all
 FROM
   game.player_actions AS pa
-INNER JOIN game.performance_metrics AS pm ON (pa.user_id = pm.user_id) AND (pa.session_id = pm.session_id)
+INNER JOIN game.performance_metrics AS pm 
+ON (pa.user_id = pm.user_id) 
+  AND (pa.session_id = pm.session_id)
+  AND date_diff_within(2m)
 GROUP BY
   pa.user_id
 SETTINGS
