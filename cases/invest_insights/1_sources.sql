@@ -22,7 +22,8 @@ CREATE Mutable STREAM IF NOT EXISTS invest_insights.position (
   SecurityId string,
   HoldingQty float64
 )
-PRIMARY KEY(SecurityAccount, SecurityId);
+PRIMARY KEY(SecurityAccount, SecurityId)
+SETTINGS logstore_retention_bytes = 107374182, logstore_retention_ms = 300000;
 
 -- execution
 CREATE EXTERNAL STREAM IF NOT EXISTS invest_insights.execution_ext (

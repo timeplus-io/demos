@@ -29,4 +29,5 @@ CREATE MUTABLE STREAM IF NOT EXISTS invest_insights.stock (
     `HighPx` float64,
     `LowPx` float64
 )
-PRIMARY KEY SecurityID;
+PRIMARY KEY SecurityID
+SETTINGS logstore_retention_bytes = 107374182, logstore_retention_ms = 300000;
