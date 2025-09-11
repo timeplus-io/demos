@@ -18,7 +18,7 @@ LANGUAGE JAVASCRIPT AS $$
   initialize: function() {
       this.sell_orders = new Map();
       this.buy_orders = new Map();
-      this.market = 'SZ';
+      this.market = 'US';
       this.min_balance = Number.MAX_VALUE;
       this.min_spread = Number.MAX_VALUE;
   },
@@ -44,9 +44,7 @@ LANGUAGE JAVASCRIPT AS $$
     if (this.T === undefined)
       this.T = 0.0;
 
-    if (this.market === 'SZ')
-      return this.T / 14220;
-    else if (this.market === 'SH')
+    if (this.market === 'US')
       return this.T / (4*60*60);
     else
       return 0.0;
@@ -120,9 +118,7 @@ LANGUAGE JAVASCRIPT AS $$
 
       let d2 = 0.0;
       let d1 = max_sell_price - min_buy_price;
-      if (this.market === 'SZ')
-        d2 = Math.max(max_sell_price+min_buy_price, 2);
-      else if (this.market === 'SH')
+      if (this.market === 'US')
         d2 = max_sell_price + min_buy_price;
 
       let gap = d1*2/d2;

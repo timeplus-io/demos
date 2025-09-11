@@ -65,9 +65,9 @@ from (
         to_unix_timestamp64_milli(now64(3)) as event_ts,
         today() as TradeDate,
         concat('o', order_idx::string) as OrderId,
-        'SH' as SecurityExchange,
+        'US' as SecurityExchange,
         concat('a', account_idx::string) as SecurityAccount,
-        to_string(600000 + security_idx % 200) as SecurityId,
+        to_string(100000 + security_idx % 200) as SecurityId,
         concat(SecurityId, '.', SecurityExchange) as Symbol,
         price_delta,
         array_join([tuple_cast(order_idx, '1', 500 + to_int64(price_delta * 10)), tuple_cast(order_idx+1, '2', 500)]) as tuple_str,
@@ -83,7 +83,7 @@ select
     today() as TradeDate,
     concat('e', order_idx::string) as OrderId,
     concat('a', account_idx::string) as SecurityAccount,
-    to_string(600000 + security_idx) as SecurityId,
+    to_string(100000 + security_idx) as SecurityId,
     if(side>5, '2', '1') as EntrustDirection,
     500 + to_int64(price_delta * 10) as LastQty,
     100::float64 + price_delta as LastPx,
@@ -96,7 +96,7 @@ select
     to_unix_timestamp64_milli(now64(3)) as event_ts,
     today() as TradeDate,
     concat('a', account_idx::string) as SecurityAccount,
-    to_string(600000 + security_idx) as SecurityId,
+    to_string(100000 + security_idx) as SecurityId,
     5000 + to_int64(price_delta * 100) as HoldingQty
 from invest_insights_data.order_random;
 
@@ -128,8 +128,8 @@ SETTINGS type = 'kafka', brokers = '10.138.0.23:9092', topic = 'invest_insights_
 create materialized view if not exists invest_insights_data.i_quote_src into invest_insights_data.stock_w_ext as
 select
     to_unix_timestamp64_milli(now64(3)) as event_ts,
-    to_string(600000 + security_idx) as SecurityID,
-    concat(SecurityID, '.SH') as Symbol,
+    to_string(100000 + security_idx) as SecurityID,
+    concat(SecurityID, '.US') as Symbol,
     100.0 as PreClosePx,
     100::float64 + price_delta as LastPx,
     99.0 as OpenPx,

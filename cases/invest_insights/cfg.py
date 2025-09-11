@@ -9,7 +9,7 @@ c = client.Client(host=host, port=8463, user=user, password=password)
 
 record = [
     # id, securityId, securityExchange, businessType, securityPosition,
-    '1879', '688001', '1', '4', 100,
+    '1879', '188001', '1', '4', 100,
     # minSpread, minReportBalance, avgSingleReportBalance, callAuctionRatio, continousAuctionRatio, ,
     0.08, 1, 0, 0, 0,
     # execBalanceRequire, execBalanceRatio, timeWeightReportPriceDiff, continousAuctionEffectRatio,
@@ -31,7 +31,7 @@ data = {
         ]
     }
 rows = []
-for i in range(600001, 603000):
+for i in range(100001, 103000):
     new_record = record.copy()
     new_record[1] = f"{i}"
     new_record[5] = random.uniform(0.1, 0.9)
