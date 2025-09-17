@@ -257,3 +257,69 @@ ORDER BY event_ts DESC;
 - Configure Kafka partitions for optimal throughput
 
 This system provides a foundation for sophisticated trading operations with real-time analytics, regulatory compliance, and operational monitoring capabilities.
+
+
+
+## Metrics
+
+### Continuous Auction Participation Rate
+
+Continuous Auction Participation Rate metric used to evaluate how actively and effectively a market maker or trading entity participates in continuous auction trading sessions. Let me break it down:
+
+#### What It Measures
+
+The metric measures the percentage of time during continuous auction periods when your trading entity maintains valid, meaningful quotes in the market that meet specific quality standards.
+
+#### How It's Calculated
+
+Basic Formula:
+
+```
+Participation Rate = Average of (Valid Sampling Points ÷ Total Available Trading Time)
+````
+
+Where:
+- Sampling occurs every second during continuous auction periods
+- Valid sampling points are seconds where your quotes meet quality requirements
+- Total time excludes trading suspensions and exemption periods
+
+#### What Makes a "Valid" Quote
+
+For a sampling point to count as valid, your quotes must simultaneously meet:
+
+- Minimum Declaration Amount: Both your buy and sell order books must have sufficient volume
+- Maximum Bid-Ask Spread: Your spread can't be too wide
+
+#### The Spread Calculation
+
+The spread is calculated using a sophisticated method:
+
+- Find effective prices by accumulating orders until minimum volume is reached
+- Calculate relative spread: (Ask - Bid) ÷ Midpoint
+- This ensures the spread measurement reflects meaningful, tradeable prices
+
+#### How to Use This Metric
+
+For Performance Monitoring:
+
+- High rates (80%+): Good continuous market presence
+- Low rates (<50%): May indicate insufficient quoting or poor quote quality
+
+For Optimization:
+
+- Monitor which times of day your participation drops
+- Identify if spread requirements or volume thresholds are causing issues
+- Adjust your quoting strategy to maintain valid quotes more consistently
+
+#### Business Impact:
+
+- Higher participation rates typically correlate with better market maker performance
+- May be tied to regulatory requirements or fee structures
+- Helps demonstrate commitment to providing liquidity
+
+This metric essentially measures how well you're fulfilling the role of providing continuous, meaningful liquidity to the market during active trading periods.
+
+
+
+### Realtime P&L
+
