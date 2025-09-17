@@ -22,7 +22,8 @@ CREATE Mutable STREAM IF NOT EXISTS invest_insights.position (
   SecurityId string,
   HoldingQty float64
 )
-PRIMARY KEY(SecurityAccount, SecurityId);
+PRIMARY KEY(SecurityAccount, SecurityId)
+SETTINGS logstore_retention_bytes = 107374182, logstore_retention_ms = 300000;
 
 -- execution
 CREATE EXTERNAL STREAM IF NOT EXISTS invest_insights.execution_ext (
@@ -57,7 +58,8 @@ CREATE STREAM IF NOT EXISTS invest_insights.execution (
   StrategyId low_cardinality(string)
 )
 PARTITION BY to_start_of_hour(_tp_time)
-TTL to_datetime(_tp_time) + INTERVAL 1 DAY;
+TTL to_datetime(_tp_time) + INTERVAL 4 HOUR
+SETTINGS index_granularity = 8192, logstore_retention_bytes = '107374182', logstore_retention_ms = '300000';
 
 -- order
 CREATE EXTERNAL STREAM IF NOT EXISTS invest_insights.exchange_order_ext (
@@ -99,7 +101,8 @@ CREATE STREAM IF NOT EXISTS invest_insights.exchange_order (
     _tp_time datetime64(6) default now64(6)
 )
 PARTITION BY to_YYYYMM(_tp_time)
-TTL to_datetime(_tp_time) + INTERVAL 1 DAY;
+TTL to_datetime(_tp_time) + INTERVAL 4 HOUR
+SETTINGS index_granularity = 8192, logstore_retention_bytes = '107374182', logstore_retention_ms = '300000';
 
 
 -- Pre-value table for storing last price

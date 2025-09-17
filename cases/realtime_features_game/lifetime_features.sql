@@ -1,5 +1,5 @@
-
 -- total first, and lastgame played, 
+CREATE MATERIALIZED VIEW game.mv_user_game_stats_feature AS
 SELECT
   user_id, 
   count_distinct(match_id) AS total_game_played,
@@ -14,6 +14,7 @@ GROUP BY
 settings seek_to = 'earliest';
 
 -- total elimination count, distinct game played
+CREATE MATERIALIZED VIEW game.mv_user_elimination_stats_feature AS
 SELECT 
     user_id, 
     count_if(event_type = 'player_elimination') AS total_elimination_count,
@@ -25,6 +26,7 @@ settings seek_to = 'earliest';
 
 -- Performance by Game Mode
 -- “Does the user’s FPS drop in battle_royale vs team_deathmatch?”
+CREATE MATERIALIZED VIEW game.mv_user_technical_performance_feature AS
 SELECT
     pa.user_id,
     pa.game_mode,
@@ -34,10 +36,12 @@ FROM game.player_actions pa
 JOIN game.performance_metrics pm
   ON pa.user_id = pm.user_id
  AND pa.session_id = pm.session_id
+ AND date_diff_within(2m) -- add time difference condition to join
 GROUP BY pa.user_id, pa.game_mode
 settings seek_to = 'earliest';
 
 -- Session Length vs Performance Degradation
+CREATE MATERIALIZED VIEW game.mv_user_battery_and_session_feature AS
 SELECT
     pa.user_id,
     avg(pm.device_stats:battery_level::float) AS avg_battery_level,
@@ -46,10 +50,12 @@ FROM game.player_actions pa
 JOIN game.performance_metrics pm
   ON pa.user_id = pm.user_id
  AND pa.session_id = pm.session_id
+ AND date_diff_within(2m)
 GROUP BY pa.user_id
 settings seek_to = 'earliest';
 
 -- “Does network latency spike when the user eliminates or gets eliminated?”
+CREATE MATERIALIZED VIEW game.mv_user_latency_by_event_feature AS
 SELECT
   pa.user_id, 
   avg_if(pm.device_stats:network_latency_ms::float, pa.event_type = 'player_elimination') AS avg_latency_during_elim, 
@@ -57,12 +63,11 @@ SELECT
   avg(pm.device_stats:network_latency_ms::float) AS avg_all
 FROM
   game.player_actions AS pa
-INNER JOIN game.performance_metrics AS pm ON (pa.user_id = pm.user_id) AND (pa.session_id = pm.session_id)
+INNER JOIN game.performance_metrics AS pm 
+ON (pa.user_id = pm.user_id) 
+  AND (pa.session_id = pm.session_id)
+  AND date_diff_within(2m)
 GROUP BY
   pa.user_id
 SETTINGS
   seek_to = 'earliest';
-
-
-
-
