@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ocsf-simulator
+  namespace: data
+  labels:
+    app: ocsf-simulator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ocsf-simulator
+  template:
+    metadata:
+      labels:
+        app: ocsf-simulator
+    spec:
+      containers:
+      - name: ocsf-simulator
+        image: timeplus/ocsf-simulator:9a9a3f3
+        command:
+        - "python3"
+        - "-m"
+        - "ocsf_simulator"
+        - "--enable-timeplus"
+        - "--timeplus-host"
+        - "timeplusd-svc.timeplus"
+        - "--timeplus-user"
+        - "admin"
+        - "--timeplus-password"
+        - "Password!"
+        - "--timeplus-database"
+        - "ocsf"
+        - "--interval"
+        - "0.1"
+        - "--batch-size"
+        - "10"
+        resources:
+          requests:
+            memory: "4096Mi"
+            cpu: "4000m"
+          limits:
+            memory: "4096Mi"
+            cpu: "4000m"
+        # Uncomment if you need to configure restart policy equivalent
+        # restartPolicy is handled at the pod level, not container level
+      restartPolicy: Always
+---
+# Optional: Service if you need to expose the simulator
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: ocsf-simulator-service
+# spec:
+#   selector:
+#     app: ocsf-simulator
+#   ports:
+#   - port: 80
+#     targetPort: 8080  # Adjust based on your app's port
+#   type: ClusterIP
