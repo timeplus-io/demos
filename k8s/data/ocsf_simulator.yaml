@@ -40,8 +40,8 @@ spec:
             memory: "4096Mi"
             cpu: "1"
           limits:
-            memory: "2048Mi"
-            cpu: "500m"
+            memory: "4096Mi"
+            cpu: "1"
         # Uncomment if you need to configure restart policy equivalent
         # restartPolicy is handled at the pod level, not container level
       restartPolicy: Always
