@@ -37,11 +37,11 @@ spec:
         - "10"
         resources:
           requests:
-            memory: "4096Mi"
-            cpu: "4000m"
+            memory: "2048Mi"
+            cpu: "500m"
           limits:
-            memory: "4096Mi"
-            cpu: "4000m"
+            memory: "2048Mi"
+            cpu: "500m"
         # Uncomment if you need to configure restart policy equivalent
         # restartPolicy is handled at the pod level, not container level
       restartPolicy: Always
