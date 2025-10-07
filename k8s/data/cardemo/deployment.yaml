@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cardemo
+  namespace: data
+  labels:
+    app: cardemo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cardemo
+  template:
+    metadata:
+      labels:
+        app: cardemo
+    spec:
+      serviceAccountName: default
+      containers:
+        - name: cardemo
+          image: timeplus/cardemo:dev_1a65ef4
+          command:
+            [
+              "/timeplus/cardemo",
+              "--config",
+              "/etc/config/cardemo.yaml",
+              "-f",
+              "/etc/config/sinks.yaml",
+            ]
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/config
+          resources:
+            requests:
+              memory: "2Gi"
+              cpu: "500m"
+            limits:
+              memory: "2Gi"
+              cpu: "500m"
+      volumes:
+        - name: config-volume
+          configMap:
+            name: cardemo-config
+      restartPolicy: Always
