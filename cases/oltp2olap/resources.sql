@@ -97,48 +97,41 @@ SETTINGS
   seek_to = 'earliest'
 
 CREATE MATERIALIZED VIEW retailer_etl.mv_load_products INTO retailer_etl.dim_products
-(
-  `_tp_time` datetime64(3, 'UTC'),
-  `productCode` string,
-  `productName` string,
-  `productLine` string,
-  `productVendor` string,
-  `productDescription` string,
-  `quantityInStock` int16,
-  `buyPrice` float32,
-  `MSRP` float32,
-  `_tp_sn` int64
-) AS
+AS
 SELECT
   _tp_time, 
   raw:after.productCode AS productCode, 
-  raw:after.productName AS productName, raw:after.productLine AS productLine, raw:after.productVendor AS productVendor, raw:after.productDescription AS productDescription, cast(raw:after.quantityInStock, 'int16') AS quantityInStock, cast(raw:after.buyPrice, 'float32') AS buyPrice, cast(raw:after.MSRP, 'float32') AS MSRP
+  raw:after.productName AS productName, 
+  raw:after.productLine AS productLine, 
+  raw:after.productVendor AS productVendor, 
+  raw:after.productDescription AS productDescription, 
+  cast(raw:after.quantityInStock, 'int16') AS quantityInStock, 
+  to_float32_or_zero(raw:after.buyPrice) AS buyPrice, 
+  to_float32_or_zero(raw:after.MSRP) AS MSRP
 FROM
   retailer_etl.topic_products
 SETTINGS
-  seek_to = 'earliest';
+  seek_to = 'earliest',
+  recovery_policy = 'best_effort',
+  recovery_retry_for_same_error = 3,
+  input_format_ignore_parsing_errors = 'true';
 
 CREATE MATERIALIZED VIEW retailer_etl.mv_orderdetails
-(
-  `_tp_time` datetime64(3, 'UTC'),
-  `orderNumber` uint32,
-  `productCode` string,
-  `quantityOrdered` int16,
-  `priceEach` float32,
-  `orderLineNumber` int16,
-  `_tp_sn` int64
-) AS
+AS
 SELECT
   _tp_time, 
   to_uint32_or_zero(raw:after.orderNumber) AS orderNumber, 
   raw:after.productCode AS productCode, 
   cast(raw:after.quantityOrdered, 'int16') AS quantityOrdered, 
-  cast(raw:after.priceEach, 'float32') AS priceEach, 
+  to_float32_or_zero(raw:after.priceEach) as priceEach,
   cast(raw:after.orderLineNumber, 'int16') AS orderLineNumber
 FROM
   retailer_etl.topic_orderdetails
 SETTINGS
-  seek_to = 'earliest';
+  seek_to = 'earliest', 
+  recovery_policy = 'best_effort',
+  recovery_retry_for_same_error = 3,
+  input_format_ignore_parsing_errors = 'true';
 
 CREATE MATERIALIZED VIEW retailer_etl.mv_mysql_gcs_pipeline INTO retailer_etl.gcs
 (
