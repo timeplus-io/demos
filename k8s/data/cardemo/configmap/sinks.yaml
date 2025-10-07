@@ -1,0 +1,5 @@
+
+sinks:
+- type: kafka
+  properties:
+    brokers: 10.138.0.23:9092
