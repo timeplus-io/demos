@@ -52,7 +52,7 @@ upgrade:
 	kubectl scale statefulset timeplusd --replicas=0 -n $(NS)
 	helm -n $(NS) upgrade $(RELEASE) ./timeplus-enterprise-v${VERSION}.tgz \
 		-f ./values_$(PLATFORM).yaml
-	kubectl scale statefulset timeplusd --replicas=3 -n $(NS)
+	kubectl scale statefulset timeplusd --replicas=1 -n $(NS)
 
 logs:
 	kubectl cp timeplusd-0:/var/log/timeplusd-server/timeplusd-server.log ./logs/timeplusd-server-0.log -c timeplusd -n $(NS)

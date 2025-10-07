@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: githubdemo
+  namespace: data
+  labels:
+    app: githubdemo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: githubdemo
+  template:
+    metadata:
+      labels:
+        app: githubdemo
+    spec:
+      containers:
+        - name: githubdemo
+          image: timeplus/github_demo:0.0.4
+          command: ["python3", "/timeplus/github_demo_gcp.py"]
+          env:
+            - name: GITHUB_TOPIC
+              value: "github_events"
+            - name: GITHUB_TOKEN
+              value: "token"
+            - name: KAFKA_USERNAME
+              value: "demo"
+            - name: KAFKA_PASSWORD
+              value: "demo123"
+            - name: KAFKA_BROKER
+              value: "kafka.demo.timeplus.com:9092"
+      restartPolicy: Always

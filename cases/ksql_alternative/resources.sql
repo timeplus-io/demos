@@ -35,7 +35,7 @@ CREATE STREAM ksql_alternative.bookings
   `uid` string
 )
 ENGINE = ExternalStream
-SETTINGS type = 'kafka', brokers = '10.138.0.23:9092 ', topic = 'bookings';
+SETTINGS type = 'kafka', brokers = '10.138.0.23:9092', topic = 'bookings';
 
 CREATE STREAM ksql_alternative.car_live_data
 (
@@ -50,7 +50,7 @@ CREATE STREAM ksql_alternative.car_live_data
   `total_km` float64
 )
 ENGINE = ExternalStream
-SETTINGS type = 'kafka', brokers = '10.138.0.23:9092 ', topic = 'car_live_data';
+SETTINGS type = 'kafka', brokers = '10.138.0.23:9092', topic = 'car_live_data';
 
 CREATE STREAM ksql_alternative.frontend_events
 (
@@ -91,14 +91,31 @@ SETTINGS type = 'kafka', brokers = '10.138.0.23:9092', topic = 'owlshop-orders';
 
 -- MV
 
+CREATE STREAM ksql_alternative.method_count_3s
+(
+  `ts` datetime64(3, 'UTC'),
+  `te` datetime64(3, 'UTC'),
+  `method` string,
+  `count` uint64
+)
+TTL to_datetime(_tp_time) + INTERVAL 4 HOUR
+SETTINGS logstore_retention_bytes = '107374182', logstore_retention_ms = '300000';
+
 CREATE MATERIALIZED VIEW ksql_alternative.mv_method_count_3s
+INTO ksql_alternative.method_count_3s
 AS
 SELECT
   window_start AS ts, window_end AS te, method, count(*) AS count
 FROM
   tumble(ksql_alternative.frontend_events, 3s)
 GROUP BY
-  window_start, window_end, method;
+  window_start, window_end, method
+SETTINGS
+  seek_to = 'earliest', 
+  recovery_policy = 'best_effort',
+  recovery_retry_for_same_error = 3,
+  input_format_ignore_parsing_errors = 'true';
+
 
 CREATE MATERIALIZED VIEW ksql_alternative.mv_order_events_table INTO ksql_alternative.order_events_table
 AS

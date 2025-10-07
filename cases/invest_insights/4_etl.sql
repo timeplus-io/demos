@@ -14,7 +14,8 @@ select
     raw:OrdStatus as OrdStatus,
     raw:StrategyId as StrategyId,
     _tp_time
-from invest_insights.exchange_order_ext;
+from invest_insights.exchange_order_ext
+settings logstore_retention_bytes = '107374182', logstore_retention_ms = '300000';
 
 create materialized view if not exists invest_insights.position_mv into invest_insights.position as
 select
@@ -24,7 +25,8 @@ select
     raw:SecurityId as SecurityId,
     to_float64_or_default(raw:HoldingQty, 0.0) as HoldingQty,
     _tp_time
-from invest_insights.position_ext;
+from invest_insights.position_ext
+settings logstore_retention_bytes = '107374182', logstore_retention_ms = '300000';
 
 create materialized view if not exists invest_insights.execution_mv into invest_insights.execution as
 select
@@ -39,7 +41,8 @@ select
     to_float64_or_default(raw:Fee, 0.0) as Fee,
     raw:StrategyId as StrategyId,
     _tp_time
-from invest_insights.execution_ext;
+from invest_insights.execution_ext
+settings logstore_retention_bytes = '107374182', logstore_retention_ms = '300000';
 
 create materialized view if not exists invest_insights.stock_mv into invest_insights.stock as
 select
@@ -53,4 +56,5 @@ select
     to_float64_or_default(raw:HighPx, 0.0) as HighPx,
     to_float64_or_default(raw:LowPx, 0.0) as LowPx,
     _tp_time
-from invest_insights.stock_ext;
+from invest_insights.stock_ext
+settings logstore_retention_bytes = '107374182', logstore_retention_ms = '300000';
