@@ -3,8 +3,10 @@ CREATE OR REPLACE FUNCTION alert_to_slack(value string) RETURNS string LANGUAGE 
 import json
 import requests
 def alert_to_slack(value):
+    result = ""
     for val in value:
-        requests.post("https://hooks.slack.com/services/***", data=json.dumps({"text": f"{val}"}))
+        result += f"{val}\n"
+    requests.post("https://hooks.slack.com/services/***", data=json.dumps({"text": f"{result}"}))
     return value
 $$
 
@@ -17,8 +19,8 @@ CALL alert_to_slack
 AS 
 SELECT concat(user_id, ' spend ', to_string(total_spend), ' in last 10 games') as value 
 FROM game.total_spend_last_10_transaction
-WHERE total_spend > 800
+WHERE total_spend > 750
 
 
 -- 
-DROP ALERT game.spending_alert
+DROP ALERT spending_alert
