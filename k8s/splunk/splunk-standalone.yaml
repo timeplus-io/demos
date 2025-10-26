@@ -17,3 +17,15 @@ spec:
   varVolumeStorageConfig:
     storageClassName: standard-rwo
     storageCapacity: 100Gi
+  # Add explicit environment variables
+  commonSpec:
+    env:
+      - name: SPLUNK_HEC_PORT
+        value: "8088"
+      - name: SPLUNK_PASSWORD
+        value: "Password!"  # Change this!
+    volumes: []
+    defaults: |-
+      splunk:
+        hec:
+          port: 8088
