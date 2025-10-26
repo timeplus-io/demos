@@ -28,14 +28,8 @@ forward:
 
 clean:
 	-kubectl delete pvc timeplusd-history-timeplusd-0 -n $(NS)
-	-kubectl delete pvc timeplusd-history-timeplusd-1 -n $(NS)
-	-kubectl delete pvc timeplusd-history-timeplusd-2 -n $(NS)
 	-kubectl delete pvc timeplusd-stream-timeplusd-0   -n $(NS)
-	-kubectl delete pvc timeplusd-stream-timeplusd-1   -n $(NS)
-	-kubectl delete pvc timeplusd-stream-timeplusd-2   -n $(NS)
 	-kubectl delete pvc timeplusd-log-timeplusd-0 -n $(NS)
-	-kubectl delete pvc timeplusd-log-timeplusd-1 -n $(NS)
-	-kubectl delete pvc timeplusd-log-timeplusd-2 -n $(NS)
 
 forwards:
 	kubectl port-forward svc/timeplus-cli 8000:8000 -n $(NS) --address 0.0.0.0
@@ -56,8 +50,6 @@ upgrade:
 
 logs:
 	kubectl cp timeplusd-0:/var/log/timeplusd-server/timeplusd-server.log ./logs/timeplusd-server-0.log -c timeplusd -n $(NS)
-	kubectl cp timeplusd-1:/var/log/timeplusd-server/timeplusd-server.log ./logs/timeplusd-server-1.log -c timeplusd -n $(NS)
-	kubectl cp timeplusd-2:/var/log/timeplusd-server/timeplusd-server.log ./logs/timeplusd-server-2.log -c timeplusd -n $(NS)
 
 forward-timeplusd:
 	kubectl port-forward svc/timeplusd-svc 8463:8463 -n $(NS)

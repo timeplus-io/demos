@@ -1,5 +1,6 @@
 timeplusd:
   tag: 2.9.9-rc.32
+  replicas: 1
   storage:
     stream:
       className: standard-rwo
@@ -26,8 +27,8 @@ timeplusd:
           preallocate: false
   resources:
     limits:
-      cpu: "15"
-      memory: "32Gi"
+      cpu: "8"
+      memory: "16Gi"
       ephemeral-storage: "10Gi"
     requests:
       cpu: "2"
