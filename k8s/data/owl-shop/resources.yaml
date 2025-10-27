@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: owlshop
+  namespace: data
+  labels:
+    app: owlshop
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: owlshop
+  template:
+    metadata:
+      labels:
+        app: owlshop
+    spec:
+      containers:
+        - name: owlshop
+          image: quay.io/cloudhut/owl-shop:latest
+          env:
+            - name: SHOP_KAFKA_BROKERS
+              value: "kafka.demo.timeplus.com:9092"
+            - name: SHOP_KAFKA_TOPICREPLICATIONFACTOR
+              value: "1"
+            - name: SHOP_TRAFFIC_INTERVAL_RATE
+              value: "1"
+            - name: SHOP_TRAFFIC_INTERVAL_DURATION
+              value: "0.1s"
+            - name: SHOP_KAFKA_SASL_USERNAME
+              value: "demo"
+            - name: SHOP_KAFKA_SASL_PASSWORD
+              value: "demo123"
+            - name: SHOP_KAFKA_TLS_ENABLED
+              value: "true"
+            - name: SHOP_KAFKA_TLS_INSECURESKIPTLSVERIFY
+              value: "true"
+            - name: SHOP_KAFKA_SASL_ENABLED
+              value: "true"
+            - name: SHOP_KAFKA_SASL_MECHANISM
+              value: "PLAIN"
+            - name: SHOP_KAFKA_SECURITY_PROTOCOL
+              value: "SASL_SSL"
+      restartPolicy: Always
