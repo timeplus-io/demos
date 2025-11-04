@@ -1,5 +1,5 @@
 timeplusd:
-  tag: 2.9.9-rc.32
+  tag: 3.0.2
   storage:
     stream:
       className: standard-rwo
@@ -35,3 +35,6 @@ timeplusd:
       ephemeral-storage: "10Gi"
   service:
     clusterIP: None
+
+timeplusAppserver:
+  tag: 3.0.21
