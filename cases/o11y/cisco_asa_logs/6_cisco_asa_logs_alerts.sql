@@ -1,5 +1,5 @@
 -- Critical Security Events (Immediate)
-CREATE VIEW cisco.mv_alert_critical_events
+CREATE VIEW cisco.v_alert_critical_events
 AS
 SELECT
   now64(3) AS alert_time,
@@ -27,7 +27,7 @@ WHERE is_critical = true
   AND severity <= 2;
 
 -- Alert 2: Brute Force Detection (5+ failed auth in 5min)
-CREATE VIEW cisco.mv_alert_brute_force
+CREATE VIEW cisco.v_alert_brute_force
 AS
 SELECT
   window_start,
@@ -56,7 +56,7 @@ HAVING count() >= 5
 EMIT PERIODIC 60s;
 
 --  DDoS Attack Indicators
-CREATE VIEW cisco.mv_alert_dos
+CREATE VIEW cisco.v_alert_dos
 AS
 SELECT
   max(ingestion_time) AS alert_time,

@@ -36,3 +36,4 @@ FROM
 SETTINGS
   seek_to = '231000000,70000000,70000000'
 STORAGE_SETTINGS index_granularity = 8192
+TTL to_datetime(_tp_time) + 7d

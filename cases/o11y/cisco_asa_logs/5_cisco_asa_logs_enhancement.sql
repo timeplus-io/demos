@@ -237,7 +237,7 @@ INSERT INTO cisco.device_assets (device_name, hostname, location, datacenter, ra
 ('FW30', 'fw-dev-staging-01', 'US-West', 'DC2-SanFrancisco', 'R22-U08', 'Development Firewall', 'ASA-5515-X', '9.18.1', '10.90.3.10', 'Engineering-Dev', 'Low', '2023-01-10', 'Any Time');
 
 
-CREATE VIEW cisco.mv_enhance_with_assets
+CREATE VIEW cisco.v_enhance_with_assets
 AS
 SELECT
   -- All fields from enhanced_asa_logs
