@@ -77,3 +77,41 @@ GROUP BY
   window_start,
   dst_ip
 HAVING count() >= 100;
+
+
+-- Alert UDF
+
+CREATE FUNCTION send_alert_with_webhook(message string) 
+RETURNS string 
+LANGUAGE PYTHON AS $$
+import json
+import requests
+
+def send_alert_with_webhook(values):
+    data = []
+    for value in values:
+        data.append(value)
+
+    data = data[:3] # limit to first 3 items
+    event = "\n".join(data)
+
+    requests.post(
+        "https://eo6fqkvuqmpqpcf.m.pipedream.net",
+        data=json.dumps({
+            "event": f"alert with log: {event}"
+        })
+    )
+    return values
+$$
+
+-- DDOS Alert
+
+CREATE ALERT cisco_observability.ddos_alert
+BATCH 1 EVENTS WITH TIMEOUT 5s
+LIMIT 1 ALERTS PER 15s
+CALL send_alert_with_webhook
+AS 
+SELECT
+  json_encode(*) AS message
+FROM
+  cisco_observability.v_alert_dos
