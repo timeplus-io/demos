@@ -1,5 +1,5 @@
 -- Enhanced stream with enriched context and derived fields
-CREATE STREAM cisco.enhanced_asa_logs
+CREATE STREAM cisco_observability.enhanced_asa_logs
 (
   `ingestion_time` datetime64(3),
   `log_timestamp` string,
@@ -36,15 +36,13 @@ CREATE STREAM cisco.enhanced_asa_logs
   -- Threat indicators
   `is_critical` nullable(bool),
   `requires_investigation` nullable(bool),
-  `action` nullable(string),
-  
-  `raw_message` string
+  `action` nullable(string)
 )
 TTL to_datetime(_tp_time) + INTERVAL 24 HOUR
 SETTINGS index_granularity = 8192 , logstore_retention_bytes = '107374182', logstore_retention_ms = '300000';
 
-CREATE MATERIALIZED VIEW cisco.mv_enhance_asa_logs
-INTO cisco.enhanced_asa_logs AS
+CREATE MATERIALIZED VIEW cisco_observability.mv_enhance_asa_logs
+INTO cisco_observability.enhanced_asa_logs AS
 WITH extracted AS (
   SELECT
     *,
@@ -67,7 +65,7 @@ WITH extracted AS (
       position(lower(asa_message), 'built') > 0, 'permit',
       NULL
     ) AS action
-  FROM cisco.parsed_asa_logs
+  FROM cisco_observability.parsed_asa_logs
 )
 SELECT
   ingestion_time,
@@ -176,13 +174,12 @@ SELECT
   (message_id LIKE '733%') OR
   (message_id LIKE '750%') AS requires_investigation,
   
-  action,
-  raw_message
+  action
 FROM extracted;
 
 
 -- Mutable stream for device/asset information
-CREATE MUTABLE STREAM cisco.device_assets
+CREATE MUTABLE STREAM cisco_observability.device_assets
 (
   `device_name` string,
   `hostname` string,
@@ -203,7 +200,7 @@ PRIMARY KEY device_name;
 
 -- Insert sample device data
 -- Insert device assets for FW00 to FW30
-INSERT INTO cisco.device_assets (device_name, hostname, location, datacenter, rack_position, device_type, hardware_model, software_version, management_ip, owner_team, criticality, deployment_date, maintenance_window) VALUES
+INSERT INTO cisco_observability.device_assets (device_name, hostname, location, datacenter, rack_position, device_type, hardware_model, software_version, management_ip, owner_team, criticality, deployment_date, maintenance_window) VALUES
 ('FW00', 'fw-dc1-edge-01', 'US-East', 'DC1-NewYork', 'R12-U15', 'Edge Firewall', 'ASA-5555-X', '9.16.4', '10.10.1.10', 'Network-Security', 'Critical', '2022-01-15', 'Sun 02:00-06:00'),
 ('FW01', 'fw-dc1-edge-02', 'US-East', 'DC1-NewYork', 'R12-U16', 'Edge Firewall', 'ASA-5555-X', '9.16.4', '10.10.1.11', 'Network-Security', 'Critical', '2022-01-15', 'Sun 02:00-06:00'),
 ('FW02', 'fw-dc1-dmz-01', 'US-East', 'DC1-NewYork', 'R15-U10', 'DMZ Firewall', 'ASA-5545-X', '9.16.2', '10.10.2.10', 'Network-Security', 'High', '2021-08-20', 'Sat 22:00-02:00'),
@@ -237,7 +234,7 @@ INSERT INTO cisco.device_assets (device_name, hostname, location, datacenter, ra
 ('FW30', 'fw-dev-staging-01', 'US-West', 'DC2-SanFrancisco', 'R22-U08', 'Development Firewall', 'ASA-5515-X', '9.18.1', '10.90.3.10', 'Engineering-Dev', 'Low', '2023-01-10', 'Any Time');
 
 
-CREATE VIEW cisco.v_enhance_with_assets
+CREATE VIEW cisco_observability.v_enrich_with_assets_and_geolocation
 AS
 SELECT
   -- All fields from enhanced_asa_logs
@@ -259,6 +256,9 @@ SELECT
   e.protocol,
   e.src_interface,
   e.dst_interface,
+
+  dict_get('geo.ip_trie', ('country_code', 'latitude', 'longitude', 'city'), to_ipv4_or_default(coalesce(e.src_ip, '0.0.0.0'),to_ipv4('0.0.0.0'))) AS src_location,
+  dict_get('geo.ip_trie', ('country_code', 'latitude', 'longitude', 'city'), to_ipv4_or_default(coalesce(e.dst_ip, '0.0.0.0'),to_ipv4('0.0.0.0'))) AS dst_location,
   
   -- Enriched fields
   e.is_internal_src,
@@ -314,8 +314,6 @@ SELECT
     hour(now()) >= to_uint8(extract(a.maintenance_window, '(\\d{2}):\\d{2}'))
     AND
     hour(now()) < to_uint8(extract(a.maintenance_window, '-(\\d{2}):\\d{2}'))
-  ) OR (a.maintenance_window = 'Any Time') AS is_in_maintenance_window,
-  
-  e.raw_message
-FROM cisco.enhanced_asa_logs e
-LEFT JOIN cisco.device_assets a ON e.device_name = a.device_name;
+  ) OR (a.maintenance_window = 'Any Time') AS is_in_maintenance_window
+FROM cisco_observability.enhanced_asa_logs e
+LEFT JOIN cisco_observability.device_assets a ON e.device_name = a.device_name;

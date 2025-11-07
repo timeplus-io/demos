@@ -1,6 +1,6 @@
 -- Fine-grained deduplication with extracted patterns
 -- Extract IPs first, then dedup on device, message_id, and IPs
-CREATE STREAM cisco.deduped_asa_logs_detailed
+CREATE STREAM cisco_observability.deduped_asa_logs_detailed
 (
   `ingestion_time` datetime64(3),
   `log_timestamp` string,
@@ -15,8 +15,8 @@ CREATE STREAM cisco.deduped_asa_logs_detailed
 TTL to_datetime(_tp_time) + INTERVAL 24 HOUR
 SETTINGS index_granularity = 8192;
 
-CREATE MATERIALIZED VIEW cisco.mv_dedup_detailed
-INTO cisco.deduped_asa_logs_detailed AS
+CREATE MATERIALIZED VIEW cisco_observability.mv_dedup_detailed
+INTO cisco_observability.deduped_asa_logs_detailed AS
 WITH extracted AS (
   SELECT
     ingestion_time,
@@ -30,7 +30,7 @@ WITH extracted AS (
     extract(asa_message, 'from ([0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3})') AS src_ip,
     -- Extract second IP (destination) 
     extract(asa_message, 'to ([0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3})') AS dst_ip
-  FROM cisco.parsed_asa_logs
+  FROM cisco_observability.parsed_asa_logs
 )
 SELECT
   ingestion_time,
@@ -47,7 +47,7 @@ FROM dedup(extracted, device_name, message_id, src_ip, dst_ip, 300s, 500000);
 
 -- Dedup with aggregation (count duplicates before deduping)
 -- First aggregate in tumble windows, then deduplicate
-CREATE STREAM cisco.deduped_with_counts
+CREATE STREAM cisco_observability.deduped_with_counts
 (
   `window_start` datetime64(3),
   `device_name` string,
@@ -60,8 +60,8 @@ CREATE STREAM cisco.deduped_with_counts
 )
 TTL to_datetime(_tp_time) + INTERVAL 24 HOUR;
 
-CREATE MATERIALIZED VIEW cisco.mv_dedup_aggregated
-INTO cisco.deduped_with_counts AS
+CREATE MATERIALIZED VIEW cisco_observability.mv_dedup_aggregated
+INTO cisco_observability.deduped_with_counts AS
 WITH aggregated AS (
   SELECT
     window_start,
@@ -72,7 +72,7 @@ WITH aggregated AS (
     any(asa_message) AS sample_message,
     uniq(extract(asa_message, 'from ([0-9.]+)')) AS unique_sources,
     uniq(extract(asa_message, 'to ([0-9.]+)')) AS unique_destinations
-  FROM tumble(cisco.parsed_asa_logs, 1m)
+  FROM tumble(cisco_observability.parsed_asa_logs, 1m)
   GROUP BY window_start, device_name, message_id
 )
 SELECT
@@ -89,7 +89,7 @@ FROM dedup(aggregated, device_name, message_id, 300s);
 
 
 -- Simple Fuzzy Dedup - Normalize by removing variable fields
-CREATE STREAM cisco.deduped_fuzzy_simple
+CREATE STREAM cisco_observability.deduped_fuzzy_simple
 (
   `ingestion_time` datetime64(3),
   `device_name` string,
@@ -103,8 +103,8 @@ CREATE STREAM cisco.deduped_fuzzy_simple
 )
 TTL to_datetime(_tp_time) + INTERVAL 24 HOUR;
 
-CREATE MATERIALIZED VIEW cisco.mv_dedup_fuzzy_simple
-INTO cisco.deduped_fuzzy_simple AS
+CREATE MATERIALIZED VIEW cisco_observability.mv_dedup_fuzzy_simple
+INTO cisco_observability.deduped_fuzzy_simple AS
 WITH normalized AS (
   SELECT
     ingestion_time,
@@ -129,7 +129,7 @@ WITH normalized AS (
         substring(replace_regexp_all(asa_message, '\\d+', 'N'), 1, 100)
       )
     ) AS msg_hash
-  FROM cisco.parsed_asa_logs
+  FROM cisco_observability.parsed_asa_logs
 )
 SELECT
   ingestion_time,
@@ -145,7 +145,7 @@ FROM dedup(normalized, device_name, msg_hash, 300s, 500000);
 
 
 -- Adjustable Similarity Levels - Coarse, Medium, Fine
-CREATE STREAM cisco.deduped_fuzzy_adjustable
+CREATE STREAM cisco_observability.deduped_fuzzy_adjustable
 (
   `ingestion_time` datetime64(3),
   `device_name` string,
@@ -159,8 +159,8 @@ CREATE STREAM cisco.deduped_fuzzy_adjustable
 )
 TTL to_datetime(_tp_time) + INTERVAL 24 HOUR;
 
-CREATE MATERIALIZED VIEW cisco.mv_dedup_fuzzy_adjustable
-INTO cisco.deduped_fuzzy_adjustable AS
+CREATE MATERIALIZED VIEW cisco_observability.mv_dedup_fuzzy_adjustable
+INTO cisco_observability.deduped_fuzzy_adjustable AS
 WITH multi_hash AS (
   SELECT
     ingestion_time,
@@ -208,7 +208,7 @@ WITH multi_hash AS (
       -- Default MEDIUM
       'medium'
     ) AS similarity_level
-  FROM cisco.parsed_asa_logs
+  FROM cisco_observability.parsed_asa_logs
 ),
 selected_hash AS (
   SELECT

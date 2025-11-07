@@ -1,12 +1,13 @@
 
-CREATE DATABASE IF NOT EXISTS cisco;
+CREATE DATABASE IF NOT EXISTS cisco_observability;
+CREATE DATABASE IF NOT EXISTS cisco_asa_simulator;
 
-CREATE RANDOM STREAM cisco.cisco_asa_logs (
+CREATE RANDOM STREAM cisco_asa_simulator.cisco_asa_logs (
     -- Timestamp
     timestamp datetime64(3) DEFAULT now64(3),
     
     -- Device identifier (FW00-FW25)
-    device_name string DEFAULT concat('FW', lpad(to_string(rand() % 26), 2, '0')),
+    device_name string DEFAULT concat('FW', lpad(to_string(rand(1) % 26), 2, '0')),
     
     -- Message category (for anomaly labeling)
     message_category string DEFAULT array_element([
@@ -15,9 +16,9 @@ CREATE RANDOM STREAM cisco.cisco_asa_logs (
         'error',          -- 4% errors
         'anomalous'       -- 1% anomalies
     ], multi_if(
-        (rand() % 100) <= 85, 1,
-        (rand() % 100) <= 95, 2,
-        (rand() % 100) <= 99, 3,
+        (rand(2) % 100) <= 85, 1,
+        (rand(3) % 100) <= 95, 2,
+        (rand(4) % 100) <= 99, 3,
         4
     )),
     
@@ -78,7 +79,7 @@ CREATE RANDOM STREAM cisco.cisco_asa_logs (
         
         -- NAT (602xxx, 702xxx)
         '602303', '602304', '702307'
-    ], (rand() % 64) + 1),
+    ], (rand(5) % 64) + 1),
     
     -- Severity level (auto-determined from message ID)
     severity int8 DEFAULT multi_if(
@@ -100,74 +101,74 @@ CREATE RANDOM STREAM cisco.cisco_asa_logs (
     
     -- Source IP addresses (realistic distribution)
     src_ip string DEFAULT multi_if(
-        (rand() % 100) <= 60, concat('10.', to_string((rand() % 256)), '.', to_string((rand() % 256)), '.', to_string((rand() % 256))),
-        (rand() % 100) <= 80, concat('192.168.', to_string((rand() % 256)), '.', to_string((rand() % 256))),
-        (rand() % 100) <= 90, concat('172.', to_string((rand() % 16) + 16), '.', to_string((rand() % 256)), '.', to_string((rand() % 256))),
-        concat(to_string((rand() % 223) + 1), '.', to_string((rand() % 256)), '.', to_string((rand() % 256)), '.', to_string((rand() % 256)))
+        (rand(6) % 100) <= 60, concat('10.', to_string((rand(7) % 256)), '.', to_string((rand(8) % 256)), '.', to_string((rand(9) % 256))),
+        (rand(10) % 100) <= 80, concat('192.168.', to_string((rand(11) % 256)), '.', to_string((rand(12) % 256))),
+        (rand(13) % 100) <= 90, concat('172.', to_string((rand(14) % 16) + 16), '.', to_string((rand(15) % 256)), '.', to_string((rand(16) % 256))),
+        concat(to_string((rand(17) % 223) + 1), '.', to_string((rand(18) % 256)), '.', to_string((rand(19) % 256)), '.', to_string((rand(20) % 256)))
     ),
     
     -- Destination IP addresses
     dst_ip string DEFAULT multi_if(
-        (rand() % 100) <= 40, concat('10.', to_string((rand() % 256)), '.', to_string((rand() % 256)), '.', to_string((rand() % 256))),
-        (rand() % 100) <= 55, concat('192.168.', to_string((rand() % 256)), '.', to_string((rand() % 256))),
-        (rand() % 100) <= 65, concat('172.', to_string((rand() % 16) + 16), '.', to_string((rand() % 256)), '.', to_string((rand() % 256))),
-        concat(to_string((rand() % 223) + 1), '.', to_string((rand() % 256)), '.', to_string((rand() % 256)), '.', to_string((rand() % 256)))
+        (rand(21) % 100) <= 40, concat('10.', to_string((rand(22) % 256)), '.', to_string((rand(23) % 256)), '.', to_string((rand(24) % 256))),
+        (rand(25) % 100) <= 55, concat('192.168.', to_string((rand(26) % 256)), '.', to_string((rand(27) % 256))),
+        (rand(28) % 100) <= 65, concat('172.', to_string((rand(29) % 16) + 16), '.', to_string((rand(30) % 256)), '.', to_string((rand(31) % 256))),
+        concat(to_string((rand(32) % 223) + 1), '.', to_string((rand(33) % 256)), '.', to_string((rand(34) % 256)), '.', to_string((rand(35) % 256)))
     ),
     
     -- Source port
     src_port uint16 DEFAULT multi_if(
-        (rand() % 100) <= 70, (rand() % 30000) + 32768,  -- Ephemeral ports
-        (rand() % 65535) + 1
+        (rand(36) % 100) <= 70, (rand(37) % 30000) + 32768,  -- Ephemeral ports
+        (rand(38) % 65535) + 1
     ),
     
     -- Destination port (weighted towards services)
     dst_port uint16 DEFAULT multi_if(
-        (rand() % 100) <= 30, 443,   -- HTTPS
-        (rand() % 100) <= 50, 80,    -- HTTP
-        (rand() % 100) <= 65, 22,    -- SSH
-        (rand() % 100) <= 75, 3389,  -- RDP
-        (rand() % 100) <= 85, 53,    -- DNS
-        (rand() % 100) <= 90, 21,    -- FTP
-        (rand() % 100) <= 93, 25,    -- SMTP
-        (rand() % 100) <= 95, 3306,  -- MySQL
-        (rand() % 100) <= 97, 5432,  -- PostgreSQL
-        (rand() % 65535) + 1
+        (rand(39) % 100) <= 30, 443,   -- HTTPS
+        (rand(40) % 100) <= 50, 80,    -- HTTP
+        (rand(41) % 100) <= 65, 22,    -- SSH
+        (rand(42) % 100) <= 75, 3389,  -- RDP
+        (rand(43) % 100) <= 85, 53,    -- DNS
+        (rand(44) % 100) <= 90, 21,    -- FTP
+        (rand(45) % 100) <= 93, 25,    -- SMTP
+        (rand(46) % 100) <= 95, 3306,  -- MySQL
+        (rand(47) % 100) <= 97, 5432,  -- PostgreSQL
+        (rand(48) % 65535) + 1
     ),
     
     -- Protocol
     protocol string DEFAULT array_element(['TCP', 'UDP', 'ICMP', 'ESP', 'AH', 'GRE'], multi_if(
-        (rand() % 100) <= 70, 1,  -- 70% TCP
-        (rand() % 100) <= 90, 2,  -- 20% UDP
-        (rand() % 100) <= 97, 3,  -- 7% ICMP
-        (rand() % 3) + 4          -- 3% other
+        (rand(49) % 100) <= 70, 1,  -- 70% TCP
+        (rand(50) % 100) <= 90, 2,  -- 20% UDP
+        (rand(51) % 100) <= 97, 3,  -- 7% ICMP
+        (rand(52) % 3) + 4          -- 3% other
     )),
     
     -- Interface names
-    src_interface string DEFAULT array_element(['outside', 'inside', 'dmz', 'management', 'wan', 'lan'], (rand() % 6) + 1),
-    dst_interface string DEFAULT array_element(['outside', 'inside', 'dmz', 'management', 'wan', 'lan'], (rand() % 6) + 1),
+    src_interface string DEFAULT array_element(['outside', 'inside', 'dmz', 'management', 'wan', 'lan'], (rand(53) % 6) + 1),
+    dst_interface string DEFAULT array_element(['outside', 'inside', 'dmz', 'management', 'wan', 'lan'], (rand(54) % 6) + 1),
     
     -- Connection ID (for session tracking)
-    connection_id uint32 DEFAULT rand(),
+    connection_id uint32 DEFAULT rand(55),
     
     -- Bytes transferred (realistic distribution)
     bytes_sent uint32 DEFAULT multi_if(
-        protocol = 'ICMP', rand() % 1000,
-        protocol = 'UDP', rand() % 50000,
-        message_id IN ('302020', '302021'), rand() % 1000,  -- ICMP sessions
-        rand() % 5000000  -- TCP can be large
+        protocol = 'ICMP', rand(56) % 1000,
+        protocol = 'UDP', rand(57) % 50000,
+        message_id IN ('302020', '302021'), rand(58) % 1000,  -- ICMP sessions
+        rand(59) % 5000000  -- TCP can be large
     ),
     
     -- Username (authentication logs)
     username string DEFAULT concat(
-        array_element(['admin', 'user', 'root', 'operator', 'guest', 'service', 'john', 'jane', 'bob', 'alice', 'system', 'test', 'vpnuser', 'webadmin'], (rand() % 14) + 1),
-        multi_if((rand() % 100) <= 60, '', to_string((rand() % 100)))
+        array_element(['admin', 'user', 'root', 'operator', 'guest', 'service', 'john', 'jane', 'bob', 'alice', 'system', 'test', 'vpnuser', 'webadmin'], (rand(60) % 14) + 1),
+        multi_if((rand(61) % 100) <= 60, '', to_string((rand(62) % 100)))
     ),
     
     -- Action (permit/deny)
     action string DEFAULT multi_if(
         message_id IN ('106001', '106023', '106100', '313001', '313004', '313005'), 'deny',
         message_id IN ('710002', '710003', '109007'), 'permit',
-        multi_if((rand() % 100) <= 85, 'permit', 'deny')
+        multi_if((rand(63) % 100) <= 85, 'permit', 'deny')
     ),
     
     -- Reason for connection teardown/denial
@@ -184,43 +185,43 @@ CREATE RANDOM STREAM cisco.cisco_asa_logs (
         'TCP Reset',
         'Idle timeout',
         'SYN Timeout'
-    ], (rand() % 12) + 1),
+    ], (rand(64) % 12) + 1),
     
     -- NAT addresses
     nat_src_ip string DEFAULT concat(
-        to_string((rand() % 223) + 1), '.', 
-        to_string((rand() % 256)), '.', 
-        to_string((rand() % 256)), '.', 
-        to_string((rand() % 256))
+        to_string((rand(65) % 223) + 1), '.', 
+        to_string((rand(66) % 256)), '.', 
+        to_string((rand(67) % 256)), '.', 
+        to_string((rand(68) % 256))
     ),
     
     nat_dst_ip string DEFAULT concat(
-        to_string((rand() % 223) + 1), '.', 
-        to_string((rand() % 256)), '.', 
-        to_string((rand() % 256)), '.', 
-        to_string((rand() % 256))
+        to_string((rand(69) % 223) + 1), '.', 
+        to_string((rand(70) % 256)), '.', 
+        to_string((rand(71) % 256)), '.', 
+        to_string((rand(72) % 256))
     ),
     
     -- Session duration (in seconds)
     duration uint32 DEFAULT multi_if(
-        (rand() % 100) <= 30, rand() % 60,       -- 30% very short (< 1 min)
-        (rand() % 100) <= 70, rand() % 600,      -- 40% short (< 10 min)
-        (rand() % 100) <= 90, rand() % 3600,     -- 20% medium (< 1 hour)
-        rand() % 86400                           -- 10% long (< 1 day)
+        (rand(73) % 100) <= 30, rand(74) % 60,       -- 30% very short (< 1 min)
+        (rand(75) % 100) <= 70, rand(76) % 600,      -- 40% short (< 10 min)
+        (rand(77) % 100) <= 90, rand(78) % 3600,     -- 20% medium (< 1 hour)
+        rand(79) % 86400                             -- 10% long (< 1 day)
     ),
     
     -- ICMP type and code
-    icmp_type uint8 DEFAULT rand() % 20,
-    icmp_code uint8 DEFAULT rand() % 16,
+    icmp_type uint8 DEFAULT rand(80) % 20,
+    icmp_code uint8 DEFAULT rand(81) % 16,
     
     -- URL (for web-related logs)
     url string DEFAULT concat(
         'http://',
-        array_element(['example', 'test', 'demo', 'sample', 'webserver', 'api', 'cdn', 'media'], (rand() % 8) + 1),
+        array_element(['example', 'test', 'demo', 'sample', 'webserver', 'api', 'cdn', 'media'], (rand(82) % 8) + 1),
         '.',
-        array_element(['com', 'net', 'org', 'io'], (rand() % 4) + 1),
+        array_element(['com', 'net', 'org', 'io'], (rand(83) % 4) + 1),
         '/',
-        array_element(['index.html', 'api/v1/data', 'login.php', 'admin/dashboard', 'files/download', 'images/banner.jpg', 'video/stream'], (rand() % 7) + 1)
+        array_element(['index.html', 'api/v1/data', 'login.php', 'admin/dashboard', 'files/download', 'images/banner.jpg', 'video/stream'], (rand(84) % 7) + 1)
     ),
     
     -- Access group name
@@ -232,10 +233,10 @@ CREATE RANDOM STREAM cisco.cisco_asa_logs (
         'vpn_access',
         'guest_access',
         'default_access'
-    ], (rand() % 7) + 1),
+    ], (rand(85) % 7) + 1),
     
     -- TCP flags
-    tcp_flags string DEFAULT array_element(['SYN', 'ACK', 'FIN', 'RST', 'PSH', 'URG', 'SYN ACK', 'FIN ACK'], (rand() % 8) + 1),
+    tcp_flags string DEFAULT array_element(['SYN', 'ACK', 'FIN', 'RST', 'PSH', 'URG', 'SYN ACK', 'FIN ACK'], (rand(86) % 8) + 1),
     
     -- Failover reason
     failover_reason string DEFAULT array_element([
@@ -245,19 +246,19 @@ CREATE RANDOM STREAM cisco.cisco_asa_logs (
         'Configuration mismatch',
         'Interface failure',
         'Command'
-    ], (rand() % 6) + 1),
+    ], (rand(87) % 6) + 1),
     
     -- Rate limiting info (for threat detection)
-    burst_rate uint16 DEFAULT rand() % 1000,
-    average_rate uint16 DEFAULT rand() % 10000,
-    cumulative_count uint32 DEFAULT rand() % 100000000,
+    burst_rate uint16 DEFAULT rand(88) % 1000,
+    average_rate uint16 DEFAULT rand(89) % 10000,
+    cumulative_count uint32 DEFAULT rand(90) % 100000000,
     
     -- File name (for FTP logs)
     filename string DEFAULT concat(
-        array_element(['report', 'data', 'backup', 'config', 'document', 'image'], (rand() % 6) + 1),
+        array_element(['report', 'data', 'backup', 'config', 'document', 'image'], (rand(91) % 6) + 1),
         '_',
-        to_string(rand() % 1000),
-        array_element(['.txt', '.pdf', '.zip', '.conf', '.log', '.jpg'], (rand() % 6) + 1)
+        to_string(rand(92) % 1000),
+        array_element(['.txt', '.pdf', '.zip', '.conf', '.log', '.jpg'], (rand(93) % 6) + 1)
     ),
     
     -- Error code (for various error scenarios)
@@ -268,13 +269,13 @@ CREATE RANDOM STREAM cisco.cisco_asa_logs (
         'Connection refused',
         'Authentication failed',
         'Invalid credentials'
-    ], (rand() % 6) + 1),
+    ], (rand(94) % 6) + 1),
     
     -- Anomaly label (1 = anomaly, 0 = normal)
     is_anomaly int8 DEFAULT multi_if(
         message_category = 'anomalous', 1,
-        message_category = 'error', multi_if((rand() % 100) <= 80, 1, 0),
-        message_category = 'warning', multi_if((rand() % 100) <= 20, 1, 0),
+        message_category = 'error', multi_if((rand(95) % 100) <= 80, 1, 0),
+        message_category = 'warning', multi_if((rand(96) % 100) <= 20, 1, 0),
         0
     ),
     
@@ -357,8 +358,8 @@ CREATE RANDOM STREAM cisco.cisco_asa_logs (
                 'access-list ', acl_name, ' ', action, 'd ', protocol, ' ', 
                 src_interface, '/', src_ip, '(', to_string(src_port), ') -> ', 
                 dst_interface, '/', dst_ip, '(', to_string(dst_port), ') hit-cnt ', 
-                to_string(rand() % 10000), ' ', 
-                array_element(['first hit', '300-second interval'], (rand() % 2) + 1)
+                to_string(rand(97) % 10000), ' ', 
+                array_element(['first hit', '300-second interval'], (rand(98) % 2) + 1)
             ),
             
             message_id = '106015', concat(
@@ -535,7 +536,7 @@ CREATE RANDOM STREAM cisco.cisco_asa_logs (
             -- ========== ERROR MESSAGES ==========
             message_id = '107001', concat(
                 'RIP auth failed from ', src_ip, ': version=2, type=string, mode=string, sequence=', 
-                to_string(rand() % 1000), ' on interface ', src_interface
+                to_string(rand(99) % 1000), ' on interface ', src_interface
             ),
             
             message_id = '108003', concat(
@@ -558,15 +559,15 @@ CREATE RANDOM STREAM cisco.cisco_asa_logs (
 ) SETTINGS eps = 100;
 
 
-CREATE EXTERNAL STREAM IF NOT EXISTS cisco.asa_logs_stream (
+CREATE EXTERNAL STREAM IF NOT EXISTS cisco_observability.asa_logs_stream (
     message string
 )
 SETTINGS type = 'kafka', brokers = '10.138.0.23:9092', topic = 'cisco_asa_logs', data_format='JSONEachRow', one_message_per_row=true;
 
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS cisco.mv_asa_logs
-INTO cisco.asa_logs_stream
+CREATE MATERIALIZED VIEW IF NOT EXISTS cisco_asa_simulator.mv_asa_logs
+INTO cisco_observability.asa_logs_stream
 AS
 SELECT
     log_message AS message
-FROM cisco.cisco_asa_logs;
+FROM cisco_asa_simulator.cisco_asa_logs;

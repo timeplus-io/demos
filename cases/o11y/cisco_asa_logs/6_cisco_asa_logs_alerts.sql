@@ -1,5 +1,5 @@
 -- Critical Security Events (Immediate)
-CREATE VIEW cisco.v_alert_critical_events
+CREATE VIEW cisco_observability.v_alert_critical_events
 AS
 SELECT
   now64(3) AS alert_time,
@@ -14,7 +14,7 @@ SELECT
   coalesce(src_ip, 'N/A') AS src_ip,
   coalesce(dst_ip, 'N/A') AS dst_ip,
   1 AS event_count,
-  [raw_message] AS raw_events,
+  [asa_message] AS raw_events,
   multi_if(
     message_id = '106022', 'Investigate connection spoofing attempt - possible attack',
     message_id = '108003', 'Block source IP - SMTP malicious pattern detected',
@@ -22,12 +22,12 @@ SELECT
     message_id = '702307', 'Expand NAT pool - exhaustion detected',
     'Investigate immediately and review security posture'
   ) AS recommended_action
-FROM cisco.enhanced_asa_logs
+FROM cisco_observability.enhanced_asa_logs
 WHERE is_critical = true
   AND severity <= 2;
 
 -- Alert 2: Brute Force Detection (5+ failed auth in 5min)
-CREATE VIEW cisco.v_alert_brute_force
+CREATE VIEW cisco_observability.v_alert_brute_force
 AS
 SELECT
   window_start,
@@ -44,9 +44,9 @@ SELECT
   src_ip,
   any(dst_ip) AS dst_ip,
   count() AS event_count,
-  group_array(raw_message) AS raw_events,
+  group_array(asa_message) AS raw_events,
   'Block source IP and investigate user account security' AS recommended_action
-FROM tumble(cisco.enhanced_asa_logs, 5m)
+FROM tumble(cisco_observability.enhanced_asa_logs, 5m)
 WHERE message_category = 'Authentication'
   AND action = 'deny'
 GROUP BY
@@ -56,7 +56,7 @@ HAVING count() >= 5
 EMIT PERIODIC 60s;
 
 --  DDoS Attack Indicators
-CREATE VIEW cisco.v_alert_dos
+CREATE VIEW cisco_observability.v_alert_dos
 AS
 SELECT
   max(ingestion_time) AS alert_time,
@@ -70,7 +70,7 @@ SELECT
   dst_ip,
   count() AS event_count,
   'Enable DoS protection and rate limiting on affected interface' AS recommended_action
-FROM tumble(cisco.enhanced_asa_logs, 10s)
+FROM tumble(cisco_observability.enhanced_asa_logs, 10s)
 WHERE message_id IN ('750004', '733104', '733105')
    OR (message_category = 'Connection Tracking' AND action = 'permit')
 GROUP BY

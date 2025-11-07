@@ -1,5 +1,5 @@
 
-CREATE VIEW cisco.v_routed_asa_logs
+CREATE VIEW cisco_observability.v_routed_asa_logs
 AS
 SELECT 
   *,
@@ -23,10 +23,10 @@ SELECT
     'INFORMATIONAL'
   ) AS severity_label
 
-FROM cisco.v_filtered_asa_logs;
+FROM cisco_observability.v_dedupped_asa_logs;
 
 
-CREATE EXTERNAL STREAM cisco.splunk_t1
+CREATE EXTERNAL STREAM cisco_observability.splunk_t1
 (
   `event` string,
   `sourcetype` string DEFAULT 'cisco:asa'
@@ -36,19 +36,18 @@ SETTINGS type = 'http', http_header_Authorization = 'Splunk f50aef7d-bd49-4ff3-9
 COMMENT 'send message to splunk.demo.timeplus.com';
 
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS cisco.mv_asa_logs_to_splunks
-INTO cisco.splunk_t1
+CREATE MATERIALIZED VIEW IF NOT EXISTS cisco_observability.mv_asa_logs_to_splunks
+INTO cisco_observability.splunk_t1
 AS
 SELECT
     json_encode(* except raw_message) AS event
-FROM cisco.v_routed_asa_logs
+FROM cisco_observability.v_routed_asa_logs
 WHERE destination = 'splunk_security';
 
 
-CREATE EXTERNAL TABLE cisco.gcs
+CREATE EXTERNAL TABLE cisco_observability.gcs
 (
   `ingestion_time` datetime64(3),
-  `raw_message` string,
   `log_timestamp` string,
   `device_name` string,
   `severity` nullable(int8),
@@ -60,12 +59,12 @@ CREATE EXTERNAL TABLE cisco.gcs
 SETTINGS type = 's3', endpoint = 'https://storage.googleapis.com/timeplus-demo', access_key_id = 'key', secret_access_key = 'id', data_format = 'JSONEachRow', write_to = 'cisco_asa/logs.jsonl', s3_min_upload_file_size = 1024, s3_max_upload_idle_seconds = 60
 
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS cisco.mv_asa_logs_to_s3
-INTO cisco.gcs
+CREATE MATERIALIZED VIEW IF NOT EXISTS cisco_observability.mv_asa_logs_to_s3
+INTO cisco_observability.gcs
 AS
 SELECT
   *
 FROM
-  cisco.v_routed_asa_logs
+  cisco_observability.v_routed_asa_logs
 WHERE
   destination = 's3_archive'

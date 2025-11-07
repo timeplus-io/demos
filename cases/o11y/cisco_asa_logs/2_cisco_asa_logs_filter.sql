@@ -1,14 +1,17 @@
-
-CREATE VIEW cisco.v_filtered_asa_logs
+CREATE VIEW cisco_observability.v_sampled_asa_logs
 AS
 SELECT *
-FROM cisco.parsed_asa_logs
-WHERE 
-  -- Keep security-relevant events
-  (severity IS NOT NULL AND severity <= 5)
-  
+FROM cisco_observability.parsed_asa_logs
+WHERE severity <= 5 OR (rand()/ 4294967296.0) < 0.01 -- Keep security-relevant events OR 1% sample
+
+
+CREATE VIEW cisco_observability.v_filtered_asa_logs
+AS
+SELECT *
+FROM cisco_observability.v_sampled_asa_logs
+WHERE   
   -- Always keep critical messages
-  OR message_id IN (
+  message_id IN (
     '106023', '106001', '106015',  -- Denials
     '733102', '733104', '733105',  -- Threats
     '750004', '108003', '106022',  -- Security
@@ -23,8 +26,4 @@ WHERE
   );
 
 
-CREATE VIEW cisco.v_sampled_asa_logs
-AS
-SELECT *
-FROM cisco.parsed_asa_logs
-WHERE severity <= 4 OR (rand()/ 4294967296.0) < 0.01 -- Keep errors OR 1% sample
+
