@@ -115,3 +115,5 @@ SELECT
   json_encode(*) AS message
 FROM
   cisco_observability.v_alert_dos
+
+-- check the alert @ https://pipedream.com/@timeplus/projects/proj_e5sjxDe/timeplus-alert-demo-p_ZJCK6Rw/inspect
