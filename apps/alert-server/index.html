@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en" class="has-background-dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timeplus Alert Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        
+        body {
+            min-height: 100vh;
+            background-color: #1a1a1a;
+        }
+        
+        .navbar {
+            background-color: #2d2d2d;
+            border-bottom: 1px solid #404040;
+        }
+        
+        .navbar-item {
+            color: #f5f5f5;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            background-color: #f14668;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .status-dot.is-connected {
+            background-color: #48c78e;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .alert-card {
+            background-color: #2d2d2d;
+            border-left: 4px solid #3273dc;
+            margin-bottom: 1rem;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .alert-card.is-critical {
+            border-left-color: #f14668;
+        }
+        
+        .alert-card.is-warning {
+            border-left-color: #ffe08a;
+        }
+        
+        .alert-card.is-info {
+            border-left-color: #3273dc;
+        }
+        
+        .alert-card.is-success {
+            border-left-color: #48c78e;
+        }
+        
+        .alert-card .card-content {
+            color: #f5f5f5;
+        }
+        
+        .alert-title {
+            color: #f5f5f5;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .alert-message {
+            color: #b5b5b5;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        
+        .alert-metadata {
+            background-color: #1a1a1a;
+            padding: 1rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-family: 'Courier New', monospace;
+            color: #b5b5b5;
+            margin-top: 1rem;
+        }
+        
+        .alert-timestamp {
+            color: #7a7a7a;
+            font-size: 0.875rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background-color: #2d2d2d;
+            border-radius: 6px;
+        }
+        
+        .empty-state-icon {
+            font-size: 4rem;
+            color: #7a7a7a;
+            margin-bottom: 1rem;
+        }
+        
+        .empty-state-text {
+            color: #b5b5b5;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar" role="navigation" aria-label="main navigation">
+        <div class="container">
+            <div class="navbar-brand">
+                <div class="navbar-item">
+                    <span class="icon-text">
+                        <span class="icon">
+                            <i class="fas fa-bell"></i>
+                        </span>
+                        <span class="has-text-weight-bold is-size-4">Alert Dashboard</span>
+                    </span>
+                </div>
+            </div>
+            <div class="navbar-menu">
+                <div class="navbar-end">
+                    <div class="navbar-item">
+                        <span class="status-dot" id="statusIndicator"></span>
+                        <span id="statusText" class="has-text-grey-light">Connecting...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="section">
+        <div class="container">
+            <div id="alertsContainer">
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="fas fa-inbox"></i>
+                    </div>
+                    <p class="empty-state-text has-text-weight-semibold is-size-5">No alerts yet</p>
+                    <p class="empty-state-text">Waiting for incoming alerts...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        const alertsContainer = document.getElementById('alertsContainer');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const statusText = document.getElementById('statusText');
+        let alertCount = 0;
+
+        // Connect to SSE stream
+        const eventSource = new EventSource('/events');
+
+        eventSource.onopen = () => {
+            console.log('Connected to alert stream');
+            statusIndicator.classList.add('is-connected');
+            statusText.textContent = 'Connected';
+            statusText.classList.remove('has-text-grey-light');
+            statusText.classList.add('has-text-success');
+        };
+
+        eventSource.onerror = (error) => {
+            console.error('SSE error:', error);
+            statusIndicator.classList.remove('is-connected');
+            statusText.textContent = 'Disconnected';
+            statusText.classList.remove('has-text-success');
+            statusText.classList.add('has-text-danger');
+        };
+
+        eventSource.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                
+                if (data.type === 'connected') {
+                    console.log(data.message);
+                    return;
+                }
+
+                displayAlert(data);
+            } catch (error) {
+                console.error('Error parsing message:', error);
+            }
+        };
+
+        function displayAlert(alert) {
+            // Remove empty state on first alert
+            if (alertCount === 0) {
+                alertsContainer.innerHTML = '';
+            }
+            alertCount++;
+
+            const severity = (alert.severity || 'info').toLowerCase();
+            const severityClass = 'is-' + severity;
+            
+            const card = document.createElement('div');
+            card.className = 'card alert-card ' + severityClass;
+            
+            let metadataHTML = '';
+            if (alert.metadata && Object.keys(alert.metadata).length > 0) {
+                const metadataStr = JSON.stringify(alert.metadata, null, 2);
+                metadataHTML = '<div class="alert-metadata">' + escapeHtml(metadataStr) + '</div>';
+            }
+
+            const tagColor = {
+                'critical': 'is-danger',
+                'warning': 'is-warning',
+                'info': 'is-info',
+                'success': 'is-success'
+            }[severity] || 'is-info';
+
+            card.innerHTML = 
+                '<div class="card-content">' +
+                    '<div class="level is-mobile">' +
+                        '<div class="level-left">' +
+                            '<div class="level-item">' +
+                                '<div class="alert-title">' + escapeHtml(alert.title || 'Alert') + '</div>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="level-right">' +
+                            '<div class="level-item">' +
+                                '<span class="tag ' + tagColor + '">' + severity.toUpperCase() + '</span>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="alert-message">' + escapeHtml(alert.message || '') + '</div>' +
+                    metadataHTML +
+                    '<div class="alert-timestamp">' +
+                        '<span class="icon-text">' +
+                            '<span class="icon"><i class="far fa-clock"></i></span>' +
+                            '<span>' + formatTimestamp(alert.timestamp) + '</span>' +
+                        '</span>' +
+                    '</div>' +
+                '</div>';
+
+            alertsContainer.insertBefore(card, alertsContainer.firstChild);
+
+            // Keep only last 50 alerts in DOM
+            while (alertsContainer.children.length > 50) {
+                alertsContainer.removeChild(alertsContainer.lastChild);
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return new Date().toLocaleString();
+            const date = new Date(timestamp);
+            return date.toLocaleString();
+        }
+    </script>
+</body>
+</html>
