@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: alert-ui
-        image: timeplus-io/alert-ui:bf99c9d
+        image: timeplus/alert-ui:bf99c9d
         ports:
         - containerPort: 8080
           name: http
