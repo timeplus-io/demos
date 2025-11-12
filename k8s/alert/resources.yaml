@@ -5,7 +5,7 @@ metadata:
   namespace: alert
   labels:
     app: alert-ui
-    version: "bf99c9d"
+    version: "5bd18aa"
 spec:
   replicas: 1
   selector:
@@ -15,11 +15,11 @@ spec:
     metadata:
       labels:
         app: alert-ui
-        version: "bf99c9d"
+        version: "5bd18aa"
     spec:
       containers:
       - name: alert-ui
-        image: timeplus/alert-ui:bf99c9d
+        image: timeplus/alert-ui:5bd18aa
         ports:
         - containerPort: 8080
           name: http
