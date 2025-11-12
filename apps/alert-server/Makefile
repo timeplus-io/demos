@@ -7,7 +7,7 @@ GIT_HASH_FULL=$(shell git rev-parse HEAD 2>/dev/null || echo "dev")
 BIN_NAME ?= alert-ui
 VERSION ?= 0.1
 IMAGE_NAME ?= $(BIN_NAME):$(GIT_HASH)
-DOCKER_ID_USER ?= timeplus-io
+DOCKER_ID_USER ?= timeplus
 
 
 
