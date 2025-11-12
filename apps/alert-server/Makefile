@@ -44,6 +44,15 @@ push_latest: push
 	docker push $(DOCKER_ID_USER)/$(BIN_NAME):latest
 	@echo "Pushed: $(DOCKER_ID_USER)/$(BIN_NAME):latest"
 
+
+docker_build: Dockerfile
+	docker buildx build \
+		--no-cache -t $(FULLNAME) \
+		--build-arg VERSION=$(VERSION) \
+		--platform linux/arm64,linux/amd64 \
+		--builder container \
+		--push .
+
 # Show current tags that would be used
 info:
 	@echo "Binary name:      $(BIN_NAME)"
