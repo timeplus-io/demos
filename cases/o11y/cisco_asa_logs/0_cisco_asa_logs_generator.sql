@@ -6,8 +6,8 @@ CREATE RANDOM STREAM cisco_asa_simulator.cisco_asa_logs (
     -- Timestamp
     timestamp datetime64(3) DEFAULT now64(3),
     
-    -- Device identifier (FW00-FW25)
-    device_name string DEFAULT concat('FW', lpad(to_string(rand(1) % 26), 2, '0')),
+    -- Device identifier (asa-fw01 to asa-fw25)
+    device_name string DEFAULT concat('asa-fw', lpad(to_string((rand(1) % 26) + 1), 2, '0')),
     
     -- Message category (for anomaly labeling)
     message_category string DEFAULT array_element([
@@ -31,6 +31,8 @@ CREATE RANDOM STREAM cisco_asa_simulator.cisco_asa_logs (
         '305011', '305012',
         -- Informational (109xxx - Authentication)
         '109001', '109005', '109007',
+        -- Informational (113xxx - AAA)
+        '113004', '113015',
         -- Informational (101xxx-105xxx - Failover/HA)
         '101001', '101002', '103002', '104004', '104500', '104502',
         '105003', '105004',
@@ -42,10 +44,12 @@ CREATE RANDOM STREAM cisco_asa_simulator.cisco_asa_logs (
         '304004',
         -- Informational (314xxx - RTSP)
         '314004',
-        -- Informational (400xxx - IPS)
-        '400038', '400043', '400044', '400048',
+        -- Informational (400xxx - IPS/IDS)
+        '400013', '400038', '400043', '400044', '400048',
         -- Informational (502xxx - Group policy)
         '502111',
+        -- Informational (713xxx - VPN)
+        '713172',
         -- Informational (718xxx - Keepalive/Hello)
         '718012', '718015', '718019', '718021', '718023',
         -- Informational (710xxx - TCP access)
@@ -79,7 +83,7 @@ CREATE RANDOM STREAM cisco_asa_simulator.cisco_asa_logs (
         
         -- NAT (602xxx, 702xxx)
         '602303', '602304', '702307'
-    ], (rand(5) % 64) + 1),
+    ], (rand(5) % 68) + 1),
     
     -- Severity level (auto-determined from message ID)
     severity int8 DEFAULT multi_if(
@@ -88,13 +92,13 @@ CREATE RANDOM STREAM cisco_asa_simulator.cisco_asa_logs (
         -- Severity 2 - Critical
         message_id IN ('106001', '108003'), 2,
         -- Severity 3 - Error  
-        message_id IN ('212003', '212004', '304003', '313004', '313005', '318107', '202010'), 3,
+        message_id IN ('212003', '212004', '304003', '313005', '318107', '202010', '313001'), 3,
         -- Severity 4 - Warning
-        message_id IN ('106023', '106015', '400038', '400043', '400044', '400048', '733102', '733104', '733105'), 4,
+        message_id IN ('106023', '106015', '113015', '313004', '400013', '400038', '400043', '400044', '400048', '733102', '733104', '733105'), 4,
         -- Severity 5 - Notification
         message_id IN ('502111', '718012', '718015', '750004'), 5,
         -- Severity 6 - Informational
-        message_id IN ('109001', '109005', '109007', '302003', '302012', '302013', '302014', '302015', '302016', '302020', '302021', '302033', '304004', '305011', '305012', '313001', '313008', '313009', '314004', '602303', '602304', '702307', '419002', '430002'), 6,
+        message_id IN ('109001', '109005', '109007', '113004', '302003', '302012', '302013', '302014', '302015', '302016', '302020', '302021', '302033', '304004', '305011', '305012', '313008', '313009', '314004', '602303', '602304', '702307', '419002', '430002', '713172'), 6,
         -- Severity 7 - Debug
         7
     ),
@@ -160,259 +164,244 @@ CREATE RANDOM STREAM cisco_asa_simulator.cisco_asa_logs (
     
     -- Username (authentication logs)
     username string DEFAULT concat(
-        array_element(['admin', 'user', 'root', 'operator', 'guest', 'service', 'john', 'jane', 'bob', 'alice', 'system', 'test', 'vpnuser', 'webadmin'], (rand(60) % 14) + 1),
+        array_element(['admin', 'user', 'root', 'operator', 'guest', 'service', 'john', 'jane', 'bob', 'alice', 'system', 'test', 'vpn_user', 'webadmin'], (rand(60) % 14) + 1),
         multi_if((rand(61) % 100) <= 60, '', to_string((rand(62) % 100)))
     ),
     
     -- Action (permit/deny)
     action string DEFAULT multi_if(
         message_id IN ('106001', '106023', '106100', '313001', '313004', '313005'), 'deny',
-        message_id IN ('710002', '710003', '109007'), 'permit',
-        multi_if((rand(63) % 100) <= 85, 'permit', 'deny')
+        'permit'
     ),
     
-    -- Reason for connection teardown/denial
-    reason string DEFAULT array_element([
-        'No matching connection',
-        'Access denied by ACL',
-        'Timeout',
-        'Invalid packet',
-        'Port unreachable',
-        'Security policy violation',
-        'Connection limit reached',
-        'No matching session',
-        'TCP FINs',
-        'TCP Reset',
-        'Idle timeout',
-        'SYN Timeout'
-    ], (rand(64) % 12) + 1),
+    -- ACL name
+    acl_name string DEFAULT array_element([
+        'INSIDE_OUT', 'OUTSIDE_IN', 'DMZ_ACCESS', 'MANAGEMENT', 
+        'VPN_ACCESS', 'DEFAULT_POLICY', 'INTERNET_ACCESS', 'ADMIN_ACL'
+    ], (rand(63) % 8) + 1),
     
-    -- NAT addresses
-    nat_src_ip string DEFAULT concat(
-        to_string((rand(65) % 223) + 1), '.', 
-        to_string((rand(66) % 256)), '.', 
-        to_string((rand(67) % 256)), '.', 
-        to_string((rand(68) % 256))
+    -- NAT IPs
+    nat_src_ip string DEFAULT multi_if(
+        (rand(64) % 100) <= 50, src_ip,
+        concat(to_string((rand(65) % 223) + 1), '.', to_string((rand(66) % 256)), '.', to_string((rand(67) % 256)), '.', to_string((rand(68) % 256)))
     ),
     
-    nat_dst_ip string DEFAULT concat(
-        to_string((rand(69) % 223) + 1), '.', 
-        to_string((rand(70) % 256)), '.', 
-        to_string((rand(71) % 256)), '.', 
-        to_string((rand(72) % 256))
+    nat_dst_ip string DEFAULT multi_if(
+        (rand(69) % 100) <= 50, dst_ip,
+        concat(to_string((rand(70) % 223) + 1), '.', to_string((rand(71) % 256)), '.', to_string((rand(72) % 256)), '.', to_string((rand(73) % 256)))
     ),
     
-    -- Session duration (in seconds)
-    duration uint32 DEFAULT multi_if(
-        (rand(73) % 100) <= 30, rand(74) % 60,       -- 30% very short (< 1 min)
-        (rand(75) % 100) <= 70, rand(76) % 600,      -- 40% short (< 10 min)
-        (rand(77) % 100) <= 90, rand(78) % 3600,     -- 20% medium (< 1 hour)
-        rand(79) % 86400                             -- 10% long (< 1 day)
-    ),
+    -- Private VPN IP
+    vpn_private_ip string DEFAULT concat('10.10.10.', to_string((rand(74) % 254) + 1)),
+    
+    -- VPN Group
+    vpn_group string DEFAULT array_element(['vpn_user1', 'vpn_user2', 'remote_access', 'corporate_vpn'], (rand(75) % 4) + 1),
+    
+    -- AAA Server
+    aaa_server string DEFAULT concat('10.0.0.', to_string((rand(76) % 50) + 1)),
+    
+    -- Auth reason
+    auth_reason string DEFAULT array_element([
+        'Invalid password', 'Account locked', 'User not found', 
+        'Certificate expired', 'Authentication timeout'
+    ], (rand(77) % 5) + 1),
+    
+    -- IDS signature
+    ids_signature uint16 DEFAULT array_element([2004, 2001, 2005, 2010, 3002, 3005], (rand(78) % 6) + 1),
     
     -- ICMP type and code
-    icmp_type uint8 DEFAULT rand(80) % 20,
-    icmp_code uint8 DEFAULT rand(81) % 16,
+    icmp_type uint8 DEFAULT (rand(79) % 18),
+    icmp_code uint8 DEFAULT (rand(80) % 16),
     
-    -- URL (for web-related logs)
-    url string DEFAULT concat(
-        'http://',
-        array_element(['example', 'test', 'demo', 'sample', 'webserver', 'api', 'cdn', 'media'], (rand(82) % 8) + 1),
-        '.',
-        array_element(['com', 'net', 'org', 'io'], (rand(83) % 4) + 1),
-        '/',
-        array_element(['index.html', 'api/v1/data', 'login.php', 'admin/dashboard', 'files/download', 'images/banner.jpg', 'video/stream'], (rand(84) % 7) + 1)
+    -- ICMP sequence number (for ICMP connection tracking)
+    icmp_seq uint16 DEFAULT (rand(94) % 65536),
+    
+    -- RX ring number (for ICMP connection tracking)
+    rx_ring_num uint8 DEFAULT (rand(95) % 8),
+    
+    -- Duration calculation helpers
+    duration_seconds uint16 DEFAULT (rand(81) % 3600),
+    
+    -- Duration string (format: hh:mm:ss with leading zeros)
+    duration string DEFAULT concat(
+        lpad(to_string(floor(duration_seconds / 3600)), 2, '0'), ':',
+        lpad(to_string(floor((duration_seconds % 3600) / 60)), 2, '0'), ':',
+        lpad(to_string(duration_seconds % 60), 2, '0')
     ),
     
-    -- Access group name
-    acl_name string DEFAULT array_element([
-        'outside_access_in',
-        'inside_access_out',
-        'dmz_access',
-        'management_access',
-        'vpn_access',
-        'guest_access',
-        'default_access'
-    ], (rand(85) % 7) + 1),
-    
     -- TCP flags
-    tcp_flags string DEFAULT array_element(['SYN', 'ACK', 'FIN', 'RST', 'PSH', 'URG', 'SYN ACK', 'FIN ACK'], (rand(86) % 8) + 1),
+    tcp_flags string DEFAULT array_element([
+        'TCP FINs', 'TCP RSTs', 'TCP SYNs', 'TCP data'
+    ], (rand(82) % 4) + 1),
+    
+    -- Connection direction
+    direction string DEFAULT array_element(['Inbound', 'Outbound'], (rand(83) % 2) + 1),
+    
+    -- Filename (for FTP)
+    filename string DEFAULT concat(
+        array_element(['report', 'data', 'config', 'backup', 'log', 'document'], (rand(84) % 6) + 1),
+        '.',
+        array_element(['txt', 'pdf', 'zip', 'cfg', 'log', 'dat'], (rand(85) % 6) + 1)
+    ),
+    
+    -- URL
+    url string DEFAULT concat(
+        'http://',
+        array_element(['example', 'test', 'internal', 'web', 'site'], (rand(86) % 5) + 1),
+        '.com/',
+        array_element(['index', 'home', 'admin', 'api', 'data'], (rand(87) % 5) + 1),
+        '.html'
+    ),
+    
+    -- Error code
+    error_code string DEFAULT concat('0x', hex((rand(88) % 65535))),
     
     -- Failover reason
     failover_reason string DEFAULT array_element([
-        'No Active unit found',
-        'Other firewall reporting failure',
-        'Sequence number mismatch',
-        'Configuration mismatch',
-        'Interface failure',
-        'Command'
-    ], (rand(87) % 6) + 1),
+        'health check failed', 'interface down', 'manual switch', 'configuration sync failed'
+    ], (rand(89) % 4) + 1),
     
-    -- Rate limiting info (for threat detection)
-    burst_rate uint16 DEFAULT rand(88) % 1000,
-    average_rate uint16 DEFAULT rand(89) % 10000,
-    cumulative_count uint32 DEFAULT rand(90) % 100000000,
+    -- Priority (syslog priority = facility * 8 + severity)
+    -- Cisco ASA uses facility 23, so priority = 184 + severity (1-7)
+    priority uint8 DEFAULT 184 + severity,
     
-    -- File name (for FTP logs)
-    filename string DEFAULT concat(
-        array_element(['report', 'data', 'backup', 'config', 'document', 'image'], (rand(91) % 6) + 1),
-        '_',
-        to_string(rand(92) % 1000),
-        array_element(['.txt', '.pdf', '.zip', '.conf', '.log', '.jpg'], (rand(93) % 6) + 1)
-    ),
-    
-    -- Error code (for various error scenarios)
-    error_code string DEFAULT array_element([
-        'Unavailable',
-        'Not responding',
-        'Timeout',
-        'Connection refused',
-        'Authentication failed',
-        'Invalid credentials'
-    ], (rand(94) % 6) + 1),
-    
-    -- Anomaly label (1 = anomaly, 0 = normal)
-    is_anomaly int8 DEFAULT multi_if(
-        message_category = 'anomalous', 1,
-        message_category = 'error', multi_if((rand(95) % 100) <= 80, 1, 0),
-        message_category = 'warning', multi_if((rand(96) % 100) <= 20, 1, 0),
-        0
-    ),
-    
-    -- Full syslog message (composite field)
-    log_message string DEFAULT concat(
-        format_datetime(timestamp, '%b %d %Y %H:%M:%S'), ' ',
-        device_name, ': %ASA-', to_string(severity), '-', message_id, ': ',
+    -- Message text construction based on message_id
+    message_text string DEFAULT (
         multi_if(
-            -- ========== CONNECTION MESSAGES (302xxx) ==========
+            -- ========== CONNECTION TRACKING (302xxx) ==========
             message_id = '302013', concat(
-                'Built ', lower(protocol), ' connection ', to_string(connection_id), 
-                ' for ', src_interface, ':', src_ip, '/', to_string(src_port), 
-                ' (', nat_src_ip, '/', to_string(src_port), ') to ', 
-                dst_interface, ':', dst_ip, '/', to_string(dst_port), 
+                'Built ', direction, ' ', upper(protocol), ' connection ', to_string(connection_id),
+                ' for ', src_interface, ':', src_ip, '/', to_string(src_port),
+                ' (', nat_src_ip, '/', to_string(src_port), ')',
+                ' to ', dst_interface, ':', dst_ip, '/', to_string(dst_port),
                 ' (', nat_dst_ip, '/', to_string(dst_port), ')'
             ),
             
-            message_id = '302015', concat(
-                'Built ', lower(protocol), ' connection for faddr ', dst_ip, '/', to_string(dst_port), 
-                ' gaddr ', nat_dst_ip, '/', to_string(dst_port), 
-                ' laddr ', src_ip, '/', to_string(src_port)
+            message_id = '302014', concat(
+                'Teardown ', upper(protocol), ' connection ', to_string(connection_id),
+                ' for ', src_interface, ':', src_ip, '/', to_string(src_port),
+                ' to ', dst_interface, ':', dst_ip, '/', to_string(dst_port),
+                ' duration ', duration, ' bytes ', to_string(bytes_sent), ' ', tcp_flags, 
+                ' ', to_string(src_port), ' ', to_string(rx_ring_num)
             ),
             
-            message_id = '302014', concat(
-                'Teardown ', protocol, ' connection ', to_string(connection_id), 
-                ' for ', src_interface, ':', src_ip, '/', to_string(src_port), 
-                ' to ', dst_interface, ':', dst_ip, '/', to_string(dst_port), 
-                ' duration ', to_string(duration), ' seconds bytes ', to_string(bytes_sent), 
-                ' ', reason
+            message_id = '302015', concat(
+                'Built ', direction, ' ', upper(protocol), ' connection ', to_string(connection_id),
+                ' for ', src_interface, ':', src_ip, '/', to_string(src_port),
+                ' (', nat_src_ip, '/', to_string(src_port), ')',
+                ' to ', dst_interface, ':', dst_ip, '/', to_string(dst_port),
+                ' (', nat_dst_ip, '/', to_string(dst_port), ')'
             ),
             
             message_id = '302016', concat(
-                'Teardown ', protocol, ' connection ', to_string(connection_id), 
-                ' for ', src_interface, ':', src_ip, '/', to_string(src_port), 
-                ' to ', dst_interface, ':', dst_ip, '/', to_string(dst_port), 
-                ' duration ', to_string(duration), ' seconds bytes ', to_string(bytes_sent)
+                'Teardown ', upper(protocol), ' connection ', to_string(connection_id),
+                ' for ', src_interface, ':', src_ip, '/', to_string(src_port),
+                ' to ', dst_interface, ':', dst_ip, '/', to_string(dst_port),
+                ' duration ', duration, ' bytes ', to_string(bytes_sent),
+                ' ', to_string(connection_id), ' ', to_string(src_port), ' ', to_string(rx_ring_num)
             ),
             
             message_id = '302020', concat(
-                'Built inbound ICMP connection for faddr ', dst_ip, '/', to_string(icmp_type), 
-                ' gaddr ', nat_dst_ip, '/', to_string(icmp_type), ' laddr ', src_ip, '/', to_string(icmp_type)
+                'Built ', direction, ' ICMP connection for faddr ', dst_ip, '/', to_string(icmp_seq),
+                ' gaddr ', nat_dst_ip, '/', to_string(icmp_seq),
+                ' laddr ', src_ip, '/', to_string(icmp_seq)
             ),
             
             message_id = '302021', concat(
-                'Teardown ICMP connection for faddr ', dst_ip, '/', to_string(icmp_type), 
-                ' gaddr ', nat_dst_ip, '/', to_string(icmp_type), ' laddr ', src_ip, '/', to_string(icmp_type)
+                'Teardown ICMP connection for faddr ', dst_ip, '/', to_string(icmp_seq),
+                ' gaddr ', nat_dst_ip, '/', to_string(icmp_seq),
+                ' laddr ', src_ip, '/', to_string(icmp_seq)
             ),
             
             message_id = '302003', concat(
-                'Built H245 connection for foreign_address ', dst_ip, '/', to_string(dst_port), 
-                ' local_address ', src_ip, '/', to_string(src_port)
+                'Built ', direction, ' ', upper(protocol), ' connection for faddr ', dst_ip, '/', to_string(dst_port),
+                ' gaddr ', nat_dst_ip, '/', to_string(dst_port), ' laddr ', src_ip, '/', to_string(src_port)
             ),
             
             message_id = '302033', concat(
-                'Pre-allocated H323 GUP Connection for faddr ', src_interface, ':', dst_ip, '/', to_string(dst_port), 
-                ' to laddr ', dst_interface, ':', src_ip, '/', to_string(src_port)
+                'Teardown ', upper(protocol), ' connection ', to_string(connection_id),
+                ' from ', src_interface, ':', src_ip, '/', to_string(src_port),
+                ' to ', dst_interface, ':', dst_ip, '/', to_string(dst_port),
+                ' duration ', duration, ' bytes ', to_string(bytes_sent), ' ', tcp_flags
             ),
             
             message_id = '302012', concat(
-                'Teardown ', protocol, ' connection ', to_string(connection_id), 
-                ' for ', src_interface, ':', src_ip, '/', to_string(src_port), 
-                ' to ', dst_interface, ':', dst_ip, '/', to_string(dst_port), 
-                ' duration ', to_string(duration), ' seconds bytes ', to_string(bytes_sent), ' ', reason
+                'Teardown ', upper(protocol), ' connection ', to_string(connection_id),
+                ' faddr ', dst_ip, '/', to_string(dst_port), ' gaddr ', nat_dst_ip, '/', to_string(dst_port),
+                ' laddr ', src_ip, '/', to_string(src_port), ' duration ', duration, ' bytes ', to_string(bytes_sent)
             ),
             
-            -- ========== DENIAL/ACCESS CONTROL (106xxx) ==========
-            message_id = '106023', concat(
-                'Deny ', protocol, ' src ', src_interface, ':', src_ip, '/', to_string(src_port), 
-                ' dst ', dst_interface, ':', dst_ip, '/', to_string(dst_port), 
-                ' by access-group "', acl_name, '"'
-            ),
-            
+            -- ========== ACCESS CONTROL (106xxx) ==========
             message_id = '106001', concat(
-                'Inbound ', protocol, ' connection denied from ', src_ip, '/', to_string(src_port), 
-                ' to ', dst_ip, '/', to_string(dst_port), ' flags ', tcp_flags, 
-                ' on interface ', src_interface
-            ),
-            
-            message_id = '106100', concat(
-                'access-list ', acl_name, ' ', action, 'd ', protocol, ' ', 
-                src_interface, '/', src_ip, '(', to_string(src_port), ') -> ', 
-                dst_interface, '/', dst_ip, '(', to_string(dst_port), ') hit-cnt ', 
-                to_string(rand(97) % 10000), ' ', 
-                array_element(['first hit', '300-second interval'], (rand(98) % 2) + 1)
+                direction, ' ', upper(protocol), ' connection denied from ', src_ip, '/', to_string(src_port),
+                ' to ', dst_ip, '/', to_string(dst_port), ' flags ', tcp_flags, ' on interface ', src_interface
             ),
             
             message_id = '106015', concat(
-                'Deny ', protocol, ' (no connection) from ', src_ip, '/', to_string(src_port), 
-                ' to ', dst_ip, '/', to_string(dst_port), ' flags ', tcp_flags, 
-                ' on interface ', src_interface
+                'Deny ', upper(protocol), ' (no connection) from ', src_ip, '/', to_string(src_port),
+                ' to ', dst_ip, '/', to_string(dst_port), ' flags ', tcp_flags, ' on interface ', src_interface
+            ),
+            
+            message_id = '106023', concat(
+                'Deny ', lower(protocol), ' src ', src_interface, ':', src_ip, '/', to_string(src_port),
+                ' dst ', dst_interface, ':', dst_ip, '/', to_string(dst_port),
+                ' by access-group "', acl_name, '" [0x0, 0x0]'
+            ),
+            
+            message_id = '106100', concat(
+                'Access-list "', acl_name, '" denied ', lower(protocol), ' ',
+                src_interface, '/', src_ip, '(', to_string(src_port), ') -> ',
+                dst_interface, '/', dst_ip, '(', to_string(dst_port), ') hit-cnt 1'
             ),
             
             message_id = '106022', concat(
-                'Deny protocol connection spoof from ', src_ip, ' to ', dst_ip, 
+                'Deny ', lower(protocol), ' connection spoof from ', src_ip, ' to ', dst_ip,
                 ' on interface ', src_interface
             ),
             
-            message_id = '106101', 'Number of cached deny-flows for ACL log has reached limit (100000).',
+            message_id = '106101', concat(
+                'The number of ACL log flows has reached limit (', to_string(rand(90) % 1000), ')'
+            ),
             
             -- ========== ICMP MESSAGES (313xxx) ==========
             message_id = '313001', concat(
-                'Denied ICMP type=', to_string(icmp_type), ', code=', to_string(icmp_code), 
-                ' from ', src_ip, ' on interface ', src_interface
+                'Denied ICMP type=', to_string(icmp_type), ', code=', to_string(icmp_code),
+                ' from ', src_ip, ' on interface ', src_interface, ' due to rate limit'
             ),
             
             message_id = '313004', concat(
-                'Denied ICMP type=', to_string(icmp_type), 
-                ', from ', src_ip, ' on interface ', src_interface, ' to ', dst_ip, 
-                ': no matching session'
+                'Denied ICMP type=', to_string(icmp_type), ', from laddr ', src_ip,
+                ' on interface ', src_interface, ' to ', dst_ip, ': no matching session'
             ),
             
             message_id = '313005', concat(
-                'No matching connection for ICMP error message: icmp src ', 
-                src_interface, ':', src_ip, ' dst ', dst_interface, ':', dst_ip, 
-                ' (type ', to_string(icmp_type), ', code ', to_string(icmp_code), ')'
+                'No matching connection for ICMP error message: ', 
+                'icmp_type=', to_string(icmp_type), ' on ', src_interface, ' interface.'
             ),
             
             message_id = '313008', concat(
-                'Denied ICMP type=', to_string(icmp_type), ', code=', to_string(icmp_code), 
-                ' from ', src_ip, ' on interface ', src_interface, ' to ', dst_ip, 
-                ': no matching connection'
-            ),
-            
-            message_id = '313009', concat(
-                'Denied invalid ICMP code ', to_string(icmp_code), ', for type=', to_string(icmp_type), 
+                'Denied ICMP type=', to_string(icmp_type), ', code=', to_string(icmp_code),
                 ' from ', src_ip, ' on interface ', src_interface
             ),
             
-            -- ========== STATE MESSAGES (305xxx) ==========
+            message_id = '313009', concat(
+                'Denied invalid ICMP code ', to_string(icmp_code), ', for ', src_interface, ':', src_ip,
+                '/', to_string(src_port), ' (', nat_src_ip, '/', to_string(src_port), ') to ',
+                dst_interface, ':', dst_ip, '/', to_string(dst_port), ' (', nat_dst_ip, '/', to_string(dst_port), ')'
+            ),
+            
+            -- ========== TRANSLATION (305xxx) ==========
             message_id = '305011', concat(
-                'Built ', lower(protocol), ' state for ', src_interface, ' address ', src_ip, 
-                ' port ', to_string(src_port), ' (', nat_src_ip, ':', to_string(src_port), ')'
+                'Built dynamic ', upper(protocol), ' translation from ',
+                src_interface, ':', src_ip, '/', to_string(src_port),
+                ' to ', dst_interface, ':', dst_ip, '/', to_string(dst_port)
             ),
             
             message_id = '305012', concat(
-                'Teardown ', lower(protocol), ' state for ', src_interface, ' address ', src_ip, 
-                ' port ', to_string(src_port), ' (', nat_src_ip, ':', to_string(src_port), ')'
+                'Teardown dynamic ', upper(protocol), ' translation from ',
+                src_interface, ':', src_ip, '/', to_string(src_port),
+                ' to ', dst_interface, ':', dst_ip, '/', to_string(dst_port),
+                ' duration ', duration
             ),
             
             -- ========== AUTHENTICATION (109xxx) ==========
@@ -429,6 +418,20 @@ CREATE RANDOM STREAM cisco_asa_simulator.cisco_asa_logs (
             message_id = '109007', concat(
                 'Authorization permitted for user ', username, ' from ', src_ip, '/', to_string(src_port), 
                 ' to ', dst_ip, '/', to_string(dst_port), ' on interface ', src_interface
+            ),
+            
+            -- ========== AAA (113xxx) ==========
+            message_id = '113004', concat(
+                'AAA user authentication Successful: server = ', aaa_server, ', user = ', username
+            ),
+            
+            message_id = '113015', concat(
+                'AAA user authentication Rejected: reason = ', auth_reason, ': user = ', username, ', server = ', aaa_server
+            ),
+            
+            -- ========== VPN (713xxx) ==========
+            message_id = '713172', concat(
+                'Group = ', vpn_group, ', IP = ', src_ip, ', Assigned private IP = ', vpn_private_ip
             ),
             
             -- ========== FAILOVER MESSAGES (101xxx-105xxx) ==========
@@ -465,7 +468,12 @@ CREATE RANDOM STREAM cisco_asa_simulator.cisco_asa_logs (
             message_id = '304004', concat('URL Server ', src_ip, ' request failed URL ', url),
             message_id = '314004', concat('RTSP client ', src_interface, ':', src_ip, ' accessed RTSP URL ', url),
             
-            -- ========== IPS (400xxx) ==========
+            -- ========== IPS/IDS (400xxx) ==========
+            message_id = '400013', concat(
+                'IDS:', to_string(ids_signature), ' ICMP echo request from ', src_ip, 
+                ' to ', dst_ip, ' on interface ', src_interface
+            ),
+            
             message_id = '400038', concat(
                 'IPS:6100 RPC Port Registration ', src_ip, ' to ', dst_ip, 
                 ' on interface ', src_interface
@@ -555,6 +563,15 @@ CREATE RANDOM STREAM cisco_asa_simulator.cisco_asa_logs (
             -- Default fallback
             concat('Event for message ID ', message_id, ' from ', src_ip, ' to ', dst_ip)
         )
+    ),
+    
+    -- Final log message in Cisco ASA syslog format
+    log_message string DEFAULT concat(
+        '<', to_string(priority), '>',
+        format_datetime(timestamp, '%b %e %H:%M:%S'),
+        ' ', device_name,
+        ' %ASA-', to_string(severity), '-', message_id, ': ',
+        message_text
     )
 ) SETTINGS eps = 100;
 

@@ -6,13 +6,13 @@ SELECT
   concat('CRIT-', to_string(uuid())) AS alert_id,
   'Critical Security Event' AS alert_type,
   device_name,
-  concat('Critical Event: ', message_category, ' (', message_id, ')') AS title,
+  concat('Critical Event: Message ID ', message_id) AS title,
   concat(
-    'Device ', device_name, ' reported a critical event. ',
+    'Device ', device_name, ' reported a critical event (Severity ', to_string(severity), '). ',
     'Message: ', asa_message
   ) AS description,
-  coalesce(src_ip, 'N/A') AS src_ip,
-  coalesce(dst_ip, 'N/A') AS dst_ip,
+  if_null(to_string(src_ip), 'N/A') AS src_ip,
+  if_null(to_string(dst_ip), 'N/A') AS dst_ip,
   1 AS event_count,
   [asa_message] AS raw_events,
   multi_if(
@@ -22,9 +22,8 @@ SELECT
     message_id = '702307', 'Expand NAT pool - exhaustion detected',
     'Investigate immediately and review security posture'
   ) AS recommended_action
-FROM cisco_observability.enhanced_asa_logs
-WHERE is_critical = true
-  AND severity <= 2;
+FROM cisco_observability.flatten_extracted_asa_logs
+WHERE severity <= 2;  -- Critical (0), Alert (1), Critical (2)
 
 -- Alert 2: Brute Force Detection (5+ failed auth in 5min)
 CREATE VIEW cisco_observability.v_alert_brute_force
@@ -36,47 +35,46 @@ SELECT
   'Brute Force Attack' AS alert_type,
   'HIGH' AS severity,
   any(device_name) AS device_name,
-  concat('Potential brute force attack from ', src_ip) AS title,
+  concat('Potential brute force attack on user ', username) AS title,
   concat(
-    'Detected ', to_string(count()), ' authentication failures from ',
-    src_ip, ' to ', dst_ip, ' in 60 seconds'
+    'Detected ', to_string(count()), ' authentication failures for user "',
+    username, '" on AAA server ', any(to_string(aaa_server)), ' in 60 seconds. ',
+    'Reasons: ', any(auth_reason)
   ) AS description,
-  src_ip,
-  any(dst_ip) AS dst_ip,
+  any(to_string(aaa_server)) AS src_ip,  -- Use AAA server as "source"
+  username AS dst_ip,  -- Use username as "target" (for consistency with alert schema)
   count() AS event_count,
   group_array(asa_message) AS raw_events,
-  'Block source IP and investigate user account security' AS recommended_action
-FROM tumble(cisco_observability.enhanced_asa_logs, 5m)
-WHERE message_category = 'Authentication'
-  AND action = 'deny'
+  'Block or investigate user account - possible credential stuffing or brute force attack' AS recommended_action
+FROM tumble(cisco_observability.flatten_extracted_asa_logs, 5m)
+WHERE message_id = '113015'  -- AAA Authentication Rejected
+  AND username != ''  -- Ensure username is populated
 GROUP BY
   window_start,
-  src_ip
+  username  -- Group by username being attacked
 HAVING count() >= 5
 EMIT PERIODIC 60s;
 
 --  DDoS Attack Indicators
-CREATE VIEW cisco_observability.v_alert_dos
+CREATE VIEW cisco_observability.v_alert_ddos
 AS
 SELECT
+  window_start,
   max(ingestion_time) AS alert_time,
-  concat('DOS-', to_string(city_hash64(dst_ip))) AS alert_id,
   'DoS Attack' AS alert_type,
   'CRITICAL' AS severity,
-  any(device_name) AS device_name,
-  concat('Potential DoS attack targeting ', dst_ip) AS title,
-  concat('High connection rate detected to ', dst_ip, ' in 10 seconds') AS description,
-  any(src_ip) AS src_ip,
+  concat('Potential DoS attack targeting ', to_string(dst_ip)) AS title,
+  group_array(src_ip) AS src_ips,
   dst_ip,
   count() AS event_count,
   'Enable DoS protection and rate limiting on affected interface' AS recommended_action
-FROM tumble(cisco_observability.enhanced_asa_logs, 10s)
-WHERE message_id IN ('750004', '733104', '733105')
-   OR (message_category = 'Connection Tracking' AND action = 'permit')
+FROM hop(cisco_observability.flatten_extracted_asa_logs, 15s,30s)
+WHERE dst_ip IS NOT NULL  -- Only events with destination IP
+AND _tp_time > now() -10m
 GROUP BY
   window_start,
   dst_ip
-HAVING count() >= 100;
+HAVING event_count > 100 and length(src_ips) > 10;  -- 10 unique source IPs send over 100 events in 30s
 
 
 -- Alert UDF

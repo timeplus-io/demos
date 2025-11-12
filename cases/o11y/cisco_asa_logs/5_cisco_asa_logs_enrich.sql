@@ -1,182 +1,269 @@
 -- Enhanced stream with enriched context and derived fields
-CREATE STREAM cisco_observability.enhanced_asa_logs
+CREATE STREAM cisco_observability.flatten_extracted_asa_logs
 (
   `ingestion_time` datetime64(3),
   `log_timestamp` string,
   `device_name` string,
   `severity` nullable(int8),
-  `severity_label` string,
   `message_id` string,
-  `message_category` string,
-  `threat_level` string,
   `asa_message` string,
-  
-  -- Extracted network fields
-  `src_ip` nullable(string),
-  `dst_ip` nullable(string),
+  `asa_message_parsed` map(string, string),
+  `direction` string,
+  `protocol` string,
+  `connection_id` nullable(uint64),
+  `src_interface` string,
+  `dst_interface` string,
+  `src_ip` nullable(ipv4),
+  `dst_ip` nullable(ipv4),
   `src_port` nullable(uint16),
   `dst_port` nullable(uint16),
-  `protocol` nullable(string),
-  `src_interface` nullable(string),
-  `dst_interface` nullable(string),
-  
-  -- Enriched fields
-  `is_internal_src` bool,
-  `is_internal_dst` bool,
-  `is_internal_to_internal` bool,
-  `is_external_to_internal` bool,
-  `is_suspicious_port` nullable(bool),
-  `is_high_risk_protocol` nullable(bool),
-  
-  -- Contextual enrichment
-  `is_business_hours` bool,
-  `day_of_week` string,
-  `traffic_direction` string,
-  
-  -- Threat indicators
-  `is_critical` nullable(bool),
-  `requires_investigation` nullable(bool),
-  `action` nullable(string)
+  `nat_src_ip` nullable(ipv4),
+  `nat_dst_ip` nullable(ipv4),
+  `nat_src_port` nullable(uint16),
+  `nat_dst_port` nullable(uint16),
+  `faddr` nullable(ipv4),
+  `gaddr` nullable(ipv4),
+  `laddr` nullable(ipv4),
+  `faddr_id` nullable(uint16),
+  `gaddr_id` nullable(uint16),
+  `laddr_id` nullable(uint16),
+  `icmp_type` nullable(uint8),
+  `icmp_code` nullable(uint8),
+  `icmp_details` string,
+  `duration` string,
+  `bytes` nullable(uint64),
+  `reason` string,
+  `acl_name` string,
+  `hex_codes` string,
+  `tcp_flags` string,
+  `interface` string,
+  `ids_signature` nullable(uint32),
+  `aaa_server` nullable(ipv4),
+  `username` string,
+  `auth_reason` string,
+  `vpn_group` string,
+  `public_ip` nullable(ipv4),
+  `private_ip` nullable(ipv4)
 )
 TTL to_datetime(_tp_time) + INTERVAL 24 HOUR
 SETTINGS index_granularity = 8192 , logstore_retention_bytes = '107374182', logstore_retention_ms = '300000';
 
-CREATE MATERIALIZED VIEW cisco_observability.mv_enhance_asa_logs
-INTO cisco_observability.enhanced_asa_logs AS
-WITH extracted AS (
-  SELECT
-    *,
-    -- Extract IPs
-    extract(asa_message, 'from ([0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3})') AS src_ip,
-    extract(asa_message, 'to ([0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3})') AS dst_ip,
-    -- Extract ports
-    to_uint16_or_null(extract(asa_message, 'from [0-9.]+/(\\d+)')) AS src_port,
-    to_uint16_or_null(extract(asa_message, 'to [0-9.]+/(\\d+)')) AS dst_port,
-    -- Extract protocol
-    upper(extract(asa_message, '(TCP|UDP|ICMP|ESP|AH|GRE)')) AS protocol,
-    -- Extract interfaces
-    extract(asa_message, 'from (\\w+):') AS src_interface,
-    extract(asa_message, 'to (\\w+):') AS dst_interface,
-    -- Extract action
-    multi_if(
-      position(lower(asa_message), 'denied') > 0, 'deny',
-      position(lower(asa_message), 'deny ') > 0, 'deny',
-      position(lower(asa_message), 'permitted') > 0, 'permit',
-      position(lower(asa_message), 'built') > 0, 'permit',
-      NULL
-    ) AS action
-  FROM cisco_observability.parsed_asa_logs
-)
+CREATE VIEW cisco_observability.v_parsed_asa_logs
+AS
 SELECT
-  ingestion_time,
-  log_timestamp,
-  device_name,
-  severity,
-  
-  -- Severity label enrichment
-  multi_if(
-    severity = 1, 'ALERT',
-    severity = 2, 'CRITICAL',
-    severity = 3, 'ERROR',
-    severity = 4, 'WARNING',
-    severity = 5, 'NOTIFICATION',
-    severity = 6, 'INFORMATIONAL',
-    severity = 7, 'DEBUG',
-    'UNKNOWN'
-  ) AS severity_label,
-  
-  message_id,
-  
-  -- Message category enrichment
-  multi_if(
-    message_id LIKE '302%', 'Connection Tracking',
-    message_id LIKE '305%', 'State Tracking',
-    message_id LIKE '106%', 'Access Control',
-    message_id LIKE '313%', 'ICMP',
-    message_id LIKE '109%', 'Authentication',
-    message_id LIKE '101%' OR message_id LIKE '103%' OR message_id LIKE '104%' OR message_id LIKE '105%', 'Failover/HA',
-    message_id LIKE '733%', 'Threat Detection',
-    message_id LIKE '750%', 'DoS Protection',
-    message_id LIKE '602%' OR message_id LIKE '702%', 'NAT',
-    message_id LIKE '400%', 'IPS',
-    message_id IN ('107001', '108003', '202010'), 'Security Error',
-    'Other'
-  ) AS message_category,
-  
-  -- Threat level assessment
-  multi_if(
-    severity <= 2, 'CRITICAL',
-    severity = 3, 'HIGH',
-    severity = 4 AND message_id IN ('106023', '106015', '733102', '733104', '733105'), 'MEDIUM',
-    message_id IN ('106022', '106101', '108003', '202010', '702307'), 'HIGH',
-    message_id LIKE '750%', 'MEDIUM',
-    'LOW'
-  ) AS threat_level,
-  
-  asa_message,
-  
-  -- Network fields
-  src_ip,
-  dst_ip,
-  src_port,
-  dst_port,
-  protocol,
-  src_interface,
-  dst_interface,
-  
-  -- Internal network detection (RFC1918)
-  multi_if(
-    src_ip LIKE '10.%', true,
-    src_ip LIKE '192.168.%', true,
-    match(src_ip, '^172\\.(1[6-9]|2[0-9]|3[0-1])\\.'), true,
-    false
-  ) AS is_internal_src,
-  
-  multi_if(
-    dst_ip LIKE '10.%', true,
-    dst_ip LIKE '192.168.%', true,
-    match(dst_ip, '^172\\.(1[6-9]|2[0-9]|3[0-1])\\.'), true,
-    false
-  ) AS is_internal_dst,
-  
-  -- Traffic flow analysis
-  is_internal_src AND is_internal_dst AS is_internal_to_internal,
-  NOT is_internal_src AND is_internal_dst AS is_external_to_internal,
-  
-  -- Suspicious port detection
-  dst_port IN (23, 135, 139, 445, 1433, 3306, 3389, 5432, 5900, 6379, 27017) AS is_suspicious_port,
-  
-  -- High-risk protocol detection
-  protocol IN ('ICMP', 'GRE') OR dst_port IN (21, 23, 69, 161) AS is_high_risk_protocol,
-  
-  -- Business hours detection (assuming UTC, adjust as needed)
-  hour(now()) >= 8 AND hour(now()) < 18 AS is_business_hours,
-  
-  -- Day of week
-  to_day_of_week(now()) AS day_of_week,
-  
-  -- Traffic direction labeling
-  multi_if(
-    is_internal_to_internal, 'internal-to-internal',
-    is_external_to_internal, 'inbound',
-    is_internal_src AND NOT is_internal_dst, 'outbound',
-    'external-to-external'
-  ) AS traffic_direction,
-  
-  -- Critical event flag
-  (severity <= 2) OR 
-  (message_id IN ('106022', '106101', '108003', '202010', '702307', '733102')) OR
-  (is_external_to_internal AND action = 'deny' AND is_suspicious_port) AS is_critical,
-  
-  -- Investigation flag
-  (severity <= 3) OR
-  (action = 'deny' AND is_external_to_internal) OR
-  (message_id LIKE '733%') OR
-  (message_id LIKE '750%') AS requires_investigation,
-  
-  action
-FROM extracted;
+    *,
+    -- Parse event-specific fields based on event_id
+    multi_if(
+        -- ============================================================
+        -- 302013: Built TCP/UDP connection (HAS NAT IPs in parentheses)
+        -- Format: Built {inbound|outbound} {TCP|UDP} connection ID for src_ifc:src_ip/src_port (nat_src_ip/nat_src_port) to dst_ifc:dst_ip/dst_port (nat_dst_ip/nat_dst_port)
+        -- ============================================================
+        message_id = '302013',
+        grok(asa_message,
+             'Built %{DATA:direction} %{DATA:protocol} connection %{INT:connection_id} for %{DATA:src_interface}:%{IP:src_ip}/%{INT:src_port} \\(%{IP:nat_src_ip}/%{INT:nat_src_port}\\) to %{DATA:dst_interface}:%{IP:dst_ip}/%{INT:dst_port} \\(%{IP:nat_dst_ip}/%{INT:nat_dst_port}\\)'),
+        
+        -- ============================================================
+        -- 302014: Teardown TCP/UDP connection (NO NAT IPs, has duration/bytes/reason)
+        -- Format: Teardown {TCP|UDP} connection ID for src_ifc:src_ip/src_port to dst_ifc:dst_ip/dst_port duration H:MM:SS bytes ### reason
+        -- ============================================================
+        message_id = '302014',
+        grok(asa_message,
+             'Teardown %{DATA:protocol} connection %{INT:connection_id} for %{DATA:src_interface}:%{IP:src_ip}/%{INT:src_port} to %{DATA:dst_interface}:%{IP:dst_ip}/%{INT:dst_port} duration %{DATA:duration} bytes %{INT:bytes} %{GREEDYDATA:reason}'),
+        
+        -- ============================================================
+        -- 302015: Built UDP connection (similar to 302013)
+        -- Format: Built {inbound|outbound} UDP connection ID for src_ifc:src_ip/src_port (nat_src_ip/nat_src_port) to dst_ifc:dst_ip/dst_port (nat_dst_ip/nat_dst_port)
+        -- ============================================================
+        message_id = '302015',
+        grok(asa_message,
+             'Built %{DATA:direction} %{DATA:protocol} connection %{INT:connection_id} for %{DATA:src_interface}:%{IP:src_ip}/%{INT:src_port} \\(%{IP:nat_src_ip}/%{INT:nat_src_port}\\) to %{DATA:dst_interface}:%{IP:dst_ip}/%{INT:dst_port} \\(%{IP:nat_dst_ip}/%{INT:nat_dst_port}\\)'),
+        
+        -- ============================================================
+        -- 302016: Teardown UDP connection (similar to 302014 but no reason)
+        -- Format: Teardown UDP connection ID for src_ifc:src_ip/src_port to dst_ifc:dst_ip/dst_port duration H:MM:SS bytes ###
+        -- ============================================================
+        message_id = '302016',
+        grok(asa_message,
+             'Teardown %{DATA:protocol} connection %{INT:connection_id} for %{DATA:src_interface}:%{IP:src_ip}/%{INT:src_port} to %{DATA:dst_interface}:%{IP:dst_ip}/%{INT:dst_port} duration %{DATA:duration} bytes %{INT:bytes}.*'),
+        
+        -- ============================================================
+        -- 302020: Built ICMP connection
+        -- Format: Built {inbound|outbound} ICMP connection for faddr dst_ip/0 gaddr nat_dst_ip/0 laddr src_ip/0
+        -- ============================================================
+        message_id = '302020',
+        grok(asa_message,
+             'Built %{DATA:direction} ICMP connection for faddr %{IP:faddr}/%{INT:faddr_id} gaddr %{IP:gaddr}/%{INT:gaddr_id} laddr %{IP:laddr}/%{INT:laddr_id}'),
+        
+        -- ============================================================
+        -- 302021: Teardown ICMP connection
+        -- Format: Teardown ICMP connection for faddr dst_ip/0 gaddr nat_dst_ip/0 laddr src_ip/0 duration H:MM:SS bytes ###
+        -- ============================================================
+        message_id = '302021',
+        grok(asa_message,
+             'Teardown ICMP connection for faddr %{IP:faddr}/%{INT:faddr_id} gaddr %{IP:gaddr}/%{INT:gaddr_id} laddr %{IP:laddr}/%{INT:laddr_id}( duration %{DATA:duration})?( bytes %{INT:bytes})?'),
+        
+        -- ============================================================
+        -- 305011: Built dynamic translation
+        -- Format: Built dynamic {TCP|UDP|ICMP} translation from src_ifc:src_ip/src_port to dst_ifc:dst_ip/dst_port
+        -- NOTE: Uses "from...to" not "for...to"
+        -- ============================================================
+        message_id = '305011',
+        grok(asa_message,
+             'Built dynamic %{DATA:protocol} translation from %{DATA:src_interface}:%{IP:src_ip}/%{INT:src_port} to %{DATA:dst_interface}:%{IP:dst_ip}/%{INT:dst_port}'),
+        
+        -- ============================================================
+        -- 305012: Teardown dynamic translation
+        -- Format: Teardown dynamic {TCP|UDP|ICMP} translation from src_ifc:src_ip/src_port to dst_ifc:dst_ip/dst_port duration H:MM:SS
+        -- NOTE: Uses "from...to" not "for...to"
+        -- ============================================================
+        message_id = '305012',
+        grok(asa_message,
+             'Teardown dynamic %{DATA:protocol} translation from %{DATA:src_interface}:%{IP:src_ip}/%{INT:src_port} to %{DATA:dst_interface}:%{IP:dst_ip}/%{INT:dst_port} duration %{DATA:duration}'),
+        
+        -- ============================================================
+        -- 106023: Deny tcp/udp by ACL
+        -- Format: Deny {tcp|udp} src src_ifc:src_ip/src_port dst dst_ifc:dst_ip/dst_port by access-group "ACL_NAME" [0x0, 0x0]
+        -- ============================================================
+        message_id = '106023',
+        grok(asa_message,
+             'Deny %{DATA:protocol} src %{DATA:src_interface}:%{IP:src_ip}/%{INT:src_port} dst %{DATA:dst_interface}:%{IP:dst_ip}/%{INT:dst_port} by access-group "%{DATA:acl_name}" \\[%{DATA:hex_codes}\\]'),
+        
+        -- ============================================================
+        -- 106015: Deny TCP (no connection)
+        -- Format: Deny {TCP|UDP} (no connection) from src_ip/src_port to dst_ip/dst_port flags {flags} on interface ifc_name
+        -- ============================================================
+        message_id = '106015',
+        grok(asa_message,
+             'Deny %{DATA:protocol} \\(no connection\\) from %{IP:src_ip}/%{INT:src_port} to %{IP:dst_ip}/%{INT:dst_port} flags %{DATA:tcp_flags} on interface %{DATA:interface}'),
+        
+        -- ============================================================
+        -- 313001: Denied ICMP
+        -- Format: Denied ICMP type=##, code=## from src_ip on interface ifc_name due to rate limit
+        -- ============================================================
+        message_id = '313001',
+        grok(asa_message,
+             'Denied ICMP type=%{INT:icmp_type}, code=%{INT:icmp_code} from %{IP:src_ip} on interface %{DATA:interface}%{GREEDYDATA:reason}'),
+        
+        -- ============================================================
+        -- 313004: Denied ICMP (no matching session)
+        -- Format: Denied ICMP type=##, from laddr src_ip on interface ifc_name to dst_ip: no matching session
+        -- ============================================================
+        message_id = '313004',
+        grok(asa_message,
+             'Denied ICMP type=%{INT:icmp_type}, from laddr %{IP:src_ip} on interface %{DATA:interface} to %{IP:dst_ip}: %{GREEDYDATA:reason}'),
+        
+        -- ============================================================
+        -- 313005: No matching connection for ICMP error
+        -- Format: No matching connection for ICMP error message: {details} on {interface} interface. Original IP payload: {details}
+        -- ============================================================
+        message_id = '313005',
+        grok(asa_message,
+             'No matching connection for ICMP error message: %{GREEDYDATA:icmp_details}'),
+        
+        -- ============================================================
+        -- 400013: IDS Alert
+        -- Format: IDS:#### ICMP echo request from src_ip to dst_ip on interface ifc_name
+        -- ============================================================
+        message_id = '400013',
+        grok(asa_message,
+             'IDS:%{INT:ids_signature} ICMP echo request from %{IP:src_ip} to %{IP:dst_ip} on interface %{DATA:interface}'),
+        
+        -- ============================================================
+        -- 113004: AAA Authentication Successful
+        -- Format: AAA user authentication Successful: server = server_ip, user = username
+        -- ============================================================
+        message_id = '113004',
+        grok(asa_message,
+             'AAA user authentication Successful: server = %{IP:aaa_server}, user = %{DATA:username}'),
+        
+        -- ============================================================
+        -- 113015: AAA Authentication Rejected
+        -- Format: AAA user authentication Rejected: reason = {reason}: user = username, server = server_ip
+        -- ============================================================
+        message_id = '113015',
+        grok(asa_message,
+             'AAA user authentication Rejected: reason = %{DATA:auth_reason}: user = %{DATA:username}, server = %{IP:aaa_server}'),
+        
+        -- ============================================================
+        -- 713172: VPN IP Assignment
+        -- Format: Group = vpn_group, IP = src_ip, Assigned private IP = private_ip
+        -- ============================================================
+        message_id = '713172',
+        grok(asa_message,
+             'Group = %{DATA:vpn_group}, IP = %{IP:public_ip}, Assigned private IP = %{IP:private_ip}'),
+        
+        -- ============================================================
+        -- Default: Return empty map for unparsed events
+        -- ============================================================
+        map_cast(['message_id'], [message_id])
+    ) as asa_message_parsed
+FROM cisco_observability.parsed_asa_logs
+WHERE message_id IN ['302013', '302014', '302015', '302016', '302020', '302021', 
+                         '305011', '305012', '106023', '106015',
+                         '313001', '313004', '313005', '400013', '113004', '113015', '713172'];
 
+CREATE VIEW cisco_observability.v_flatten_asa_logs
+AS
+SELECT
+    -- Original fields
+    *,
+    -- Flatten map fields with type casting
+    -- Common Connection Fields
+    asa_message_parsed['direction'] as direction,
+    asa_message_parsed['protocol'] as protocol,
+    to_uint64_or_null(asa_message_parsed['connection_id']) as connection_id,
+    asa_message_parsed['src_interface'] as src_interface,
+    asa_message_parsed['dst_interface'] as dst_interface,
+    to_ipv4_or_null(asa_message_parsed['src_ip']) as src_ip,
+    to_ipv4_or_null(asa_message_parsed['dst_ip']) as dst_ip,
+    to_uint16_or_null(asa_message_parsed['src_port']) as src_port,
+    to_uint16_or_null(asa_message_parsed['dst_port']) as dst_port,
+    
+    -- NAT Fields
+    to_ipv4_or_null(asa_message_parsed['nat_src_ip']) as nat_src_ip,
+    to_ipv4_or_null(asa_message_parsed['nat_dst_ip']) as nat_dst_ip,
+    to_uint16_or_null(asa_message_parsed['nat_src_port']) as nat_src_port,
+    to_uint16_or_null(asa_message_parsed['nat_dst_port']) as nat_dst_port,
+    
+    -- ICMP Fields
+    to_ipv4_or_null(asa_message_parsed['faddr']) as faddr,
+    to_ipv4_or_null(asa_message_parsed['gaddr']) as gaddr,
+    to_ipv4_or_null(asa_message_parsed['laddr']) as laddr,
+    to_uint16_or_null(asa_message_parsed['faddr_id']) as faddr_id,
+    to_uint16_or_null(asa_message_parsed['gaddr_id']) as gaddr_id,
+    to_uint16_or_null(asa_message_parsed['laddr_id']) as laddr_id,
+    to_uint8_or_null(asa_message_parsed['icmp_type']) as icmp_type,
+    to_uint8_or_null(asa_message_parsed['icmp_code']) as icmp_code,
+    asa_message_parsed['icmp_details'] as icmp_details,
+    
+    -- Traffic Metrics
+    asa_message_parsed['duration'] as duration,
+    to_uint64_or_null(asa_message_parsed['bytes']) as bytes,
+    asa_message_parsed['reason'] as reason,
+    
+    -- Security/ACL
+    asa_message_parsed['acl_name'] as acl_name,
+    asa_message_parsed['hex_codes'] as hex_codes,
+    asa_message_parsed['tcp_flags'] as tcp_flags,
+    asa_message_parsed['interface'] as interface,
+    
+    -- IDS/Authentication
+    to_uint32_or_null(asa_message_parsed['ids_signature']) as ids_signature,
+    to_ipv4_or_null(asa_message_parsed['aaa_server']) as aaa_server,
+    asa_message_parsed['username'] as username,
+    asa_message_parsed['auth_reason'] as auth_reason,
+    
+    -- VPN
+    asa_message_parsed['vpn_group'] as vpn_group,
+    to_ipv4_or_null(asa_message_parsed['public_ip']) as public_ip,
+    to_ipv4_or_null(asa_message_parsed['private_ip']) as private_ip
+FROM cisco_observability.v_parsed_asa_logs;
+
+CREATE MATERIALIZED VIEW cisco_observability.mv_enhanced_asa_logs
+INTO cisco_observability.flatten_extracted_asa_logs AS
+SELECT
+    *
+FROM cisco_observability.v_flatten_asa_logs;
 
 -- Mutable stream for device/asset information
 CREATE MUTABLE STREAM cisco_observability.device_assets
@@ -242,10 +329,7 @@ SELECT
   e.log_timestamp,
   e.device_name,
   e.severity,
-  e.severity_label,
   e.message_id,
-  e.message_category,
-  e.threat_level,
   e.asa_message,
   
   -- Network fields
@@ -257,26 +341,8 @@ SELECT
   e.src_interface,
   e.dst_interface,
 
-  dict_get('geo.ip_trie', ('country_code', 'latitude', 'longitude', 'city'), to_ipv4_or_default(coalesce(e.src_ip, '0.0.0.0'),to_ipv4('0.0.0.0'))) AS src_location,
-  dict_get('geo.ip_trie', ('country_code', 'latitude', 'longitude', 'city'), to_ipv4_or_default(coalesce(e.dst_ip, '0.0.0.0'),to_ipv4('0.0.0.0'))) AS dst_location,
-  
-  -- Enriched fields
-  e.is_internal_src,
-  e.is_internal_dst,
-  e.is_internal_to_internal,
-  e.is_external_to_internal,
-  e.is_suspicious_port,
-  e.is_high_risk_protocol,
-  
-  -- Contextual
-  e.is_business_hours,
-  e.day_of_week,
-  e.traffic_direction,
-  
-  -- Threat indicators
-  e.is_critical,
-  e.requires_investigation,
-  e.action,
+  dict_get('geo.ip_trie', ('country_code', 'latitude', 'longitude', 'city'), coalesce(e.src_ip, to_ipv4('0.0.0.0'))) AS src_location,
+  dict_get('geo.ip_trie', ('country_code', 'latitude', 'longitude', 'city'), coalesce(e.dst_ip, to_ipv4('0.0.0.0'))) AS dst_location,
   
   -- Device/Asset fields from JOIN
   a.hostname AS device_hostname,
@@ -315,5 +381,5 @@ SELECT
     AND
     hour(now()) < to_uint8(extract(a.maintenance_window, '-(\\d{2}):\\d{2}'))
   ) OR (a.maintenance_window = 'Any Time') AS is_in_maintenance_window
-FROM cisco_observability.enhanced_asa_logs e
+FROM cisco_observability.flatten_extracted_asa_logs e
 LEFT JOIN cisco_observability.device_assets a ON e.device_name = a.device_name;

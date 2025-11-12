@@ -25,7 +25,7 @@ SELECT
 FROM (
   SELECT
     message,
-    grok(message, '%{DATA:timestamp} %{NOTSPACE:device_name}: \\%ASA-%{INT:severity}-%{INT:message_id}: %{GREEDYDATA:asa_message}') AS base_fields
+    grok(message, '<%{POSINT:priority}>%{DATA:timestamp} %{HOSTNAME:device_name} %%{WORD:facility}-%{INT:severity}-%{INT:message_id}: %{GREEDYDATA:asa_message}') AS base_fields
   FROM cisco_observability.asa_logs_stream
 )
 WHERE base_fields['message_id'] IS NOT NULL;
