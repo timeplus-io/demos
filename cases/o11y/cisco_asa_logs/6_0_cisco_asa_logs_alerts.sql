@@ -8,7 +8,7 @@ SELECT
     'Device ', device_name, ' reported a critical event (Severity ', to_string(severity), '). ',
     'Message: ', asa_message
   ) AS description,
-  'critical' AS alert_serverity,
+  'critical' AS alert_severity,
   [asa_message] AS raw_events
 FROM cisco_observability.flatten_extracted_asa_logs
 WHERE severity < 2;
@@ -17,11 +17,7 @@ WHERE severity < 2;
 CREATE VIEW cisco_observability.v_alert_brute_force
 AS
 SELECT
-  window_start,
-  max(ingestion_time) AS alert_time,
-  concat('BRUTE-', to_string(uuid())) AS alert_id,
-  'Brute Force Attack' AS alert_type,
-  'HIGH' AS severity,
+  window_start as alert_time,
   any(device_name) AS device_name,
   concat('Potential brute force attack on user ', username) AS title,
   concat(
@@ -29,40 +25,70 @@ SELECT
     username, '" on AAA server ', any(to_string(aaa_server)), ' in 60 seconds. ',
     'Reasons: ', any(auth_reason)
   ) AS description,
-  any(to_string(aaa_server)) AS src_ip,  -- Use AAA server as "source"
+  any(to_string(aaa_server)) AS server,  -- Use AAA server as "source"
+  'critical' AS alert_severity,
   username,  -- Use username as "target"
   count() AS event_count,
   group_array(asa_message) AS raw_events,
   'Block or investigate user account - possible credential stuffing or brute force attack' AS recommended_action
-FROM tumble(cisco_observability.flatten_extracted_asa_logs, 5m)
+FROM tumble(cisco_observability.flatten_extracted_asa_logs, 1m)
 WHERE message_id = '113015'  -- AAA Authentication Rejected
   AND username != ''  -- Ensure username is populated
 GROUP BY
   window_start,
   username  -- Group by username being attacked
-HAVING count() >= 5
-EMIT PERIODIC 60s;
+HAVING count() >= 30
+EMIT PERIODIC 15s;
 
 --  DDoS Attack Indicators
 CREATE VIEW cisco_observability.v_alert_ddos
 AS
 SELECT
-  window_start,
-  max(ingestion_time) AS alert_time,
-  'DoS Attack' AS alert_type,
-  'critical' AS severity,
+  window_start AS alert_time,
+  'critical' AS alert_severity,
   concat('Potential DoS attack targeting ', to_string(dst_ip)) AS title,
-  group_array(src_ip) AS src_ips,
+  concat(
+    'Detected ', to_string(event_count), ' connection attempts from ',
+    to_string(src_ip_number), ' unique source IPs within 30 seconds. ',
+    'This indicates a distributed denial-of-service attack pattern where multiple sources ',
+    'are simultaneously flooding the target system. The attack may be attempting to ',
+    'exhaust system resources and cause service disruption.'
+  ) AS description,
+  group_array(src_ip) AS src_ip_list,
+  length(src_ip_list) AS src_ip_number,
   dst_ip,
   count() AS event_count,
   'Enable DoS protection and rate limiting on affected interface' AS recommended_action
-FROM hop(cisco_observability.flatten_extracted_asa_logs, 15s,30s)
+FROM hop(cisco_observability.flatten_extracted_asa_logs, 15s, 30s)
 WHERE dst_ip IS NOT NULL  -- Only events with destination IP
-AND _tp_time > now() -10m
 GROUP BY
   window_start,
   dst_ip
-HAVING event_count > 100 and length(src_ips) > 10;  -- 10 unique source IPs send over 100 events in 30s
+HAVING event_count > 100 AND src_ip_number > 10;   -- 10 unique source IPs send over 100 events in 30s
+
+
+CREATE VIEW cisco_observability.v_alerts_all
+AS
+SELECT
+  title,
+  description as content,
+  alert_severity as severity
+FROM
+  cisco_observability.v_alert_critical_events
+UNION
+SELECT
+  title,
+  description as content,
+  alert_severity as severity
+FROM
+  cisco_observability.v_alert_brute_force
+UNION
+SELECT
+  title,
+  description as content,
+  alert_severity as severity
+FROM
+  cisco_observability.v_alert_ddos
 
 
 -- Alert UDF
@@ -89,20 +115,22 @@ def send_alert_with_webhook(title, content, severity):
     return results
 $$
 
--- Critical Alert
+-- Check the alert @ http://34.168.13.2
 
-CREATE ALERT cisco_observability.critical_event_alert
+
+-- Alert
+
+CREATE ALERT cisco_observability.event_alert
 BATCH 1 EVENTS WITH TIMEOUT 5s
 LIMIT 1 ALERTS PER 15s
 CALL send_alert_with_webhook
 AS 
 SELECT
   title,
-  description as content,
-  alert_serverity as severity
+  content,
+  severity
 FROM
-  cisco_observability.v_alert_critical_events;
+  cisco_observability.v_alerts_all;
 
-DROP ALERT IF EXISTS cisco_observability.critical_event_alert;
+DROP ALERT IF EXISTS cisco_observability.event_alert;
 
--- check the alert @ http://34.168.13.2

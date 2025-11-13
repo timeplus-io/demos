@@ -1,4 +1,4 @@
-
+-- Simulate Critical Alert Logs from Cisco ASA Firewalls
 CREATE RANDOM STREAM cisco_asa_simulator.cisco_asa_critical_logs (
     -- Timestamp
     timestamp datetime64(3) DEFAULT now64(3),
@@ -199,3 +199,216 @@ FROM cisco_asa_simulator.cisco_asa_critical_logs;
 
 SYSTEM PAUSE MATERIALIZED VIEW cisco_asa_simulator.mv_asa_critical_logs;
 SYSTEM RESUME MATERIALIZED VIEW cisco_asa_simulator.mv_asa_critical_logs;
+
+
+-- Simulate Brute Force Attack Logs (multiple failed AAA authentications)
+CREATE RANDOM STREAM cisco_asa_simulator.brute_force_attack_stream(
+    -- Timestamp
+    timestamp datetime64(3) DEFAULT now64(3),
+    
+    -- Device identifier - multiple firewalls seeing the attack
+    device_name string DEFAULT concat('asa-fw', lpad(to_string((rand(1) % 5) + 1), 2, '0')),
+    
+    -- Fixed message ID for authentication rejection
+    message_id string DEFAULT '113015',
+    
+    -- Severity 4 - Warning (for 113015)
+    severity int8 DEFAULT 4,
+    
+    -- Source IP addresses - Multiple attackers from different locations
+    -- Simulate botnet/distributed attack with mix of public IPs
+    src_ip string DEFAULT multi_if(
+        (rand(2) % 100) <= 70, concat(to_string((rand(3) % 223) + 1), '.', to_string((rand(4) % 256)), '.', to_string((rand(5) % 256)), '.', to_string((rand(6) % 256))),
+        (rand(7) % 100) <= 85, concat('185.', to_string((rand(8) % 256)), '.', to_string((rand(9) % 256)), '.', to_string((rand(10) % 256))),  -- Common attack ranges
+        (rand(11) % 100) <= 95, concat('45.', to_string((rand(12) % 256)), '.', to_string((rand(13) % 256)), '.', to_string((rand(14) % 256))),   -- More attack ranges
+        concat('198.', to_string((rand(15) % 256)), '.', to_string((rand(16) % 256)), '.', to_string((rand(17) % 256)))
+    ),
+    
+    -- FIXED Destination IP - The target AAA server being attacked
+    dst_ip string DEFAULT '10.50.100.25',  -- Single target server
+    
+    -- Source port - random high ports
+    src_port uint16 DEFAULT (rand(18) % 30000) + 32768,
+    
+    -- Destination port - Common AAA/authentication ports
+    dst_port uint16 DEFAULT array_element([
+        1812,  -- RADIUS auth (most common)
+        1645,  -- Old RADIUS auth
+        49,    -- TACACS+
+        389,   -- LDAP
+        636,   -- LDAPS
+        3389   -- RDP (if AAA server also hosts RDP)
+    ], multi_if(
+        (rand(19) % 100) <= 70, 1,  -- 70% RADIUS
+        (rand(20) % 100) <= 85, 2,  -- 15% old RADIUS
+        (rand(21) % 100) <= 92, 3,  -- 7% TACACS+
+        (rand(22) % 100) <= 96, 4,  -- 4% LDAP
+        (rand(23) % 100) <= 98, 5,  -- 2% LDAPS
+        6                           -- 2% RDP
+    )),
+    
+    -- Protocol
+    protocol string DEFAULT 'UDP',  -- AAA typically uses UDP
+    
+    -- Interface names - attack coming from outside
+    src_interface string DEFAULT 'outside',
+    dst_interface string DEFAULT 'inside',
+    
+    -- Username - Common brute force username attempts
+    username string DEFAULT array_element([
+        'admin',
+        'administrator',
+        'root'
+    ], (rand(24) % 30) + 1),
+    
+    -- AAA Server - The target server being attacked
+    aaa_server string DEFAULT '10.50.100.25',  -- Same as dst_ip
+    
+    -- Authentication rejection reasons
+    auth_reason string DEFAULT array_element([
+        'Invalid password',
+        'Invalid username',
+        'Authentication timeout',
+        'User not found',
+        'Account locked',
+        'Maximum retries exceeded',
+        'Invalid credentials',
+        'Access denied',
+        'Authentication failed',
+        'Login attempt blocked',
+        'Password mismatch',
+        'Unknown user'
+    ], (rand(25) % 12) + 1),
+    
+    -- Action - always deny for failed auth
+    action string DEFAULT 'deny',
+    
+    -- Priority (facility 20 - local4, severity 4 - warning)
+    priority uint8 DEFAULT 164,
+    
+    -- Message text for 113015
+    message_text string DEFAULT concat(
+        'AAA user authentication Rejected: reason = ', auth_reason, 
+        ': user = ', username, 
+        ', server = ', aaa_server
+    ),
+    
+    -- Final log message in Cisco ASA syslog format
+    log_message string DEFAULT concat(
+        '<', to_string(priority), '>',
+        format_datetime(timestamp, '%b %e %H:%M:%S'),
+        ' ', device_name,
+        ' %ASA-', to_string(severity), '-', message_id, ': ',
+        message_text
+    )
+) SETTINGS eps = 50;
+
+CREATE MATERIALIZED VIEW cisco_asa_simulator.mv_brute_force_attack_logs
+INTO cisco_observability.asa_logs_stream 
+AS
+SELECT
+    log_message AS message
+FROM cisco_asa_simulator.brute_force_attack_stream;
+
+SYSTEM PAUSE MATERIALIZED VIEW cisco_asa_simulator.mv_brute_force_attack_logs;
+SYSTEM RESUME MATERIALIZED VIEW cisco_asa_simulator.mv_brute_force_attack_logs;
+
+--
+CREATE RANDOM STREAM cisco_asa_simulator.ddos_attack (
+    -- Timestamp
+    timestamp datetime64(3) DEFAULT now64(3),
+    
+    -- Device identifier - firewall detecting the attack
+    device_name string DEFAULT concat('asa-fw', lpad(to_string((rand(1) % 3) + 1), 2, '0')),
+    
+    -- Message ID - 90% TCP SYN flood (106015), 10% ICMP flood (313001)
+    message_id string DEFAULT if((rand(2) % 100) <= 90, '106015', '313001'),
+    
+    -- Severity - both are warnings (4)
+    severity int8 DEFAULT 4,
+    
+    -- Source IP addresses - Distributed attack from many different IPs (botnet)
+    -- Simulate global botnet with diverse IP ranges
+    src_ip string DEFAULT concat(
+        to_string((rand(3) % 223) + 1), '.', 
+        to_string((rand(4) % 256)), '.', 
+        to_string((rand(5) % 256)), '.', 
+        to_string((rand(6) % 256))
+    ),
+    
+    -- FIXED Destination IP - Single target being attacked
+    dst_ip string DEFAULT '192.168.10.100',  -- Web server or critical service being targeted
+    
+    -- Source port - Random high ports (ephemeral)
+    src_port uint16 DEFAULT (rand(7) % 30000) + 32768,
+    
+    -- Destination port - Target service ports
+    dst_port uint16 DEFAULT multi_if(
+        message_id = '313001', 0,  -- ICMP doesn't use ports
+        (rand(8) % 100) <= 60, 443,   -- 60% HTTPS
+        (rand(9) % 100) <= 85, 80,    -- 25% HTTP
+        (rand(10) % 100) <= 95, 22,   -- 10% SSH
+        53                             -- 5% DNS
+    ),
+    
+    -- Protocol
+    protocol string DEFAULT if(message_id = '313001', 'ICMP', 'TCP'),
+    
+    -- Interface names - attack from outside
+    src_interface string DEFAULT 'outside',
+    dst_interface string DEFAULT 'dmz',  -- Target in DMZ
+    
+    -- Action - always deny (firewall blocking the flood)
+    action string DEFAULT 'deny',
+    
+    -- Connection flags for TCP (SYN flood)
+    tcp_flags string DEFAULT if(message_id = '106015', 'SYN', ''),
+    
+    -- ACL name that's blocking
+    acl_name string DEFAULT 'outside_access_in',
+    
+    -- Priority (facility 20 - local4, severity 4 - warning)
+    priority uint8 DEFAULT 164,
+    
+    -- Bytes (small packets in DDoS)
+    bytes_sent uint32 DEFAULT if(message_id = '313001', rand(11) % 100, rand(12) % 500),
+    
+    -- Duration (very short - part of flood)
+    duration uint16 DEFAULT rand(13) % 5,
+    
+    -- Message text based on message ID
+    message_text string DEFAULT if(
+        message_id = '106015',
+        -- TCP SYN flood
+        concat(
+            'Deny TCP (no connection) from ', src_ip, '/', to_string(src_port),
+            ' to ', dst_ip, '/', to_string(dst_port),
+            ' flags ', tcp_flags,
+            ' on interface ', src_interface
+        ),
+        -- ICMP flood  
+        concat(
+            'Denied ICMP type=', to_string((rand(14) % 2) + 8), ', code=0 from ',
+            src_ip, ' on interface ', src_interface
+        )
+    ),
+    
+    -- Final log message in Cisco ASA syslog format
+    log_message string DEFAULT concat(
+        '<', to_string(priority), '>',
+        format_datetime(timestamp, '%b %e %H:%M:%S'),
+        ' ', device_name,
+        ' %ASA-', to_string(severity), '-', message_id, ': ',
+        message_text
+    )
+) SETTINGS eps = 500; 
+
+CREATE MATERIALIZED VIEW cisco_asa_simulator.mv_ddos_attack_logs
+INTO cisco_observability.asa_logs_stream 
+AS
+SELECT
+    log_message AS message
+FROM cisco_asa_simulator.ddos_attack;
+
+SYSTEM PAUSE MATERIALIZED VIEW cisco_asa_simulator.mv_ddos_attack_logs;
+SYSTEM RESUME MATERIALIZED VIEW cisco_asa_simulator.mv_ddos_attack_logs;
