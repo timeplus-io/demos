@@ -197,10 +197,7 @@ SELECT
         -- ============================================================
         map_cast(['message_id'], [message_id])
     ) as asa_message_parsed
-FROM cisco_observability.parsed_asa_logs
-WHERE message_id IN ['302013', '302014', '302015', '302016', '302020', '302021', 
-                         '305011', '305012', '106023', '106015',
-                         '313001', '313004', '313005', '400013', '113004', '113015', '713172'];
+FROM cisco_observability.parsed_asa_logs;
 
 CREATE VIEW cisco_observability.v_flatten_asa_logs
 AS
