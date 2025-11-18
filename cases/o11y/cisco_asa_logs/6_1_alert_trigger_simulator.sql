@@ -189,7 +189,7 @@ CREATE RANDOM STREAM cisco_asa_simulator.cisco_asa_critical_logs (
     
 ) SETTINGS eps = 0.5;  -- 1 critical issue per two seconds
 
--- Materialized sending failover cable error logs
+-- Materialized sending critical logs
 CREATE MATERIALIZED VIEW cisco_asa_simulator.mv_asa_critical_logs
 INTO cisco_observability.asa_logs_stream 
 AS
