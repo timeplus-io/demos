@@ -40,6 +40,7 @@ FROM alpha.market_data
 PARTITION BY symbol;
 
 -- Alpha 2: Mean Reversion
+CREATE OR REPLACE VIEW alpha.v_mean_reversion AS
 SELECT 
     symbol,
     timestamp,
@@ -54,6 +55,7 @@ FROM alpha.market_data
 PARTITION BY symbol;
 
 -- Alpha 8: MA Crossover 
+CREATE OR REPLACE VIEW alpha.v_ma_crossover AS
 SELECT 
     symbol,
     timestamp,
@@ -68,6 +70,7 @@ FROM alpha.market_data
 PARTITION BY symbol;
 
 -- Alpha 9: Price Acceleration
+CREATE OR REPLACE VIEW alpha.v_price_acceleration AS
 SELECT 
     symbol,
     timestamp,
@@ -87,6 +90,7 @@ PARTITION BY symbol;
 
 -- Alpha 10: Bollinger Band Position
 -- Calculate position within Bollinger Bands
+CREATE OR REPLACE VIEW alpha.v_bollinger_position AS
 SELECT 
     symbol,
     timestamp,
@@ -141,6 +145,7 @@ CREATE RANDOM STREAM alpha.transactions (
 ) SETTINGS eps = 50, interval_time = 10;
 
 -- Combined Alpha Strategy
+CREATE OR REPLACE VIEW alpha.v_price_signals AS
 WITH price_signals AS (
     SELECT 
         symbol,
@@ -192,6 +197,7 @@ LEFT JOIN order_signals o ON p.symbol = o.symbol;
 
 -- monitor queries
 -- Real-time Alpha Dashboard
+CREATE OR REPLACE VIEW alpha.v_alpha_dashboard AS
 WITH alpha_stream AS
   (
     SELECT
