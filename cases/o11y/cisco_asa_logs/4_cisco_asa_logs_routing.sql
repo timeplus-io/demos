@@ -8,10 +8,10 @@ SELECT
     severity <= 2, 'splunk_security',                          -- Critical
     message_id IN ('733102', '733104', '733105', '750004'), 'siem_threat',
     message_id IN ('106023', '106001', '106015'), 'siem_denials',
-    message_id LIKE '109%', 'elastic_auth',
+    message_id LIKE '109%', 'auth_audit',
     message_id LIKE '302%', 'prometheus_metrics',
     message_id IN ('202010', '702307', '101002', '104500'), 'ops_alerts',
-    's3_archive'
+    'archive'
   ) AS destination,
   
   multi_if(
@@ -67,4 +67,4 @@ SELECT
 FROM
   cisco_observability.v_routed_asa_logs
 WHERE
-  destination = 's3_archive'
+  destination = 'auth_audit';

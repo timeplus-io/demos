@@ -1,5 +1,5 @@
 
--- Simplified parsed stream with only routing fields
+-- Parsed Stream with generic fields
 CREATE STREAM cisco_observability.parsed_asa_logs
 (
   `ingestion_time` datetime64(3),
