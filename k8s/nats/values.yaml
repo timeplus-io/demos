@@ -1,0 +1,18 @@
+config:
+  jetstream:
+    enabled: true
+    fileStore:
+      enabled: true
+      dir: /data
+      pvc:
+        enabled: true
+        size: 10Gi
+        storageClassName: standard-rwo
+    memoryStore:
+      enabled: true
+      maxSize: 2Gi
+  cluster:
+    enabled: false
+
+auth:
+  enabled: false
