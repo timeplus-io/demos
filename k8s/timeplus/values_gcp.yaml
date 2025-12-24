@@ -1,5 +1,5 @@
 timeplusd:
-  tag: 3.0.2
+  tag: 3.0.3-rc.20
   storage:
     stream:
       className: standard-rwo
@@ -37,4 +37,4 @@ timeplusd:
     clusterIP: None
 
 timeplusAppserver:
-  tag: 3.0.21
+  tag: 3.0.36

@@ -1,7 +1,7 @@
 STORAGE_CLASS=$(shell kubectl get storageclass -o jsonpath='{.items[?(@.metadata.annotations.storageclass\.kubernetes\.io/is-default-class=="true")].metadata.name}')
 NS=timeplus
 RELEASE=timeplus
-VERSION=8.0.6
+VERSION=v10.0.7
 PLATFORM=gcp
 
 .PHONY: logs
@@ -49,15 +49,15 @@ ano:
 	kubectl annotate service timeplus-appserver-elb service.beta.kubernetes.io/aws-load-balancer-scheme="internet-facing" -n user-gang
 
 upgrade:
-	kubectl scale statefulset timeplusd --replicas=0 -n $(NS)
-	helm -n $(NS) upgrade $(RELEASE) ./timeplus-enterprise-v${VERSION}.tgz \
+	#kubectl scale statefulset timeplusd --replicas=0 -n $(NS)
+	helm -n $(NS) upgrade $(RELEASE) timeplus/timeplus-enterprise --version $(VERSION) \
 		-f ./values_$(PLATFORM).yaml
-	kubectl scale statefulset timeplusd --replicas=3 -n $(NS)
+	#kubectl scale statefulset timeplusd --replicas=3 -n $(NS)
 
 logs:
-	kubectl cp timeplusd-0:/var/log/timeplusd-server/timeplusd-server.log ./logs/timeplusd-server-0.log -c timeplusd -n $(NS)
-	kubectl cp timeplusd-1:/var/log/timeplusd-server/timeplusd-server.log ./logs/timeplusd-server-1.log -c timeplusd -n $(NS)
-	kubectl cp timeplusd-2:/var/log/timeplusd-server/timeplusd-server.log ./logs/timeplusd-server-2.log -c timeplusd -n $(NS)
+	kubectl cp timeplusd-0:/var/log/timeplusd-server/ ./logs/timeplusd-server-0/ -c timeplusd -n $(NS)
+	kubectl cp timeplusd-1:/var/log/timeplusd-server/ ./logs/timeplusd-server-1/ -c timeplusd -n $(NS)
+	kubectl cp timeplusd-2:/var/log/timeplusd-server/ ./logs/timeplusd-server-2/ -c timeplusd -n $(NS)
 
 forward-timeplusd:
 	kubectl port-forward svc/timeplusd-svc 8463:8463 -n $(NS)
@@ -65,4 +65,11 @@ forward-timeplusd:
 sync:
 	./timeplus sync apply ./scripts
 
+scale_pvc:
+	kubectl patch pvc timeplusd-history-timeplusd-0 -n timeplus   -p '{"spec":{"resources":{"requests":{"storage":"400Gi"}}}}'
+	kubectl patch pvc timeplusd-history-timeplusd-1 -n timeplus   -p '{"spec":{"resources":{"requests":{"storage":"400Gi"}}}}'
+	kubectl patch pvc timeplusd-history-timeplusd-2 -n timeplus   -p '{"spec":{"resources":{"requests":{"storage":"400Gi"}}}}'
+	kubectl patch pvc timeplusd-stream-timeplusd-0 -n timeplus   -p '{"spec":{"resources":{"requests":{"storage":"400Gi"}}}}'
+	kubectl patch pvc timeplusd-stream-timeplusd-1 -n timeplus   -p '{"spec":{"resources":{"requests":{"storage":"400Gi"}}}}'
+	kubectl patch pvc timeplusd-stream-timeplusd-2 -n timeplus   -p '{"spec":{"resources":{"requests":{"storage":"400Gi"}}}}'
 		 
