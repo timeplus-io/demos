@@ -73,7 +73,7 @@ CREATE DICTIONARY retailer_etl.dict_products
   `MSRP` float32
 )
 PRIMARY KEY productCode
-SOURCE(MYSQL(DB 'retailer' TABLE 'products' HOST '35.247.93.97' PORT 3306 USER 'admin' PASSWORD 'password' BG_RECONNECT true))
+SOURCE(MYSQL(DB 'retailer' TABLE 'products' HOST '35.247.93.97' PORT 3306 USER 'admin' PASSWORD 'Password!' BG_RECONNECT true))
 LAYOUT(MUTABLE_CACHE(DB 'retailer_etl' STREAM 'dim_products' UPDATE_FROM_SOURCE false));
 
 -- MV
