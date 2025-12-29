@@ -95,6 +95,8 @@ FROM
   retailer_etl.topic_orders
 SETTINGS
   seek_to = 'earliest'
+STORAGE_SETTINGS index_granularity = 8192, logstore_retention_ms = '107374182', logstore_retention_bytes = '300000'
+TTL to_datetime(_tp_time) + INTERVAL 24 HOUR;
 
 CREATE MATERIALIZED VIEW retailer_etl.mv_load_products INTO retailer_etl.dim_products
 AS
@@ -131,7 +133,9 @@ SETTINGS
   seek_to = 'earliest', 
   recovery_policy = 'best_effort',
   recovery_retry_for_same_error = 3,
-  input_format_ignore_parsing_errors = 'true';
+  input_format_ignore_parsing_errors = 'true'
+STORAGE_SETTINGS index_granularity = 8192, logstore_retention_ms = '107374182', logstore_retention_bytes = '300000'
+TTL to_datetime(_tp_time) + INTERVAL 24 HOUR;
 
 CREATE MATERIALIZED VIEW retailer_etl.mv_mysql_gcs_pipeline INTO retailer_etl.gcs
 (
