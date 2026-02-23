@@ -50,12 +50,12 @@ CREATE STREAM IF NOT EXISTS invest_insights.execution (
   OrderId string,
   TradeDate date,
   SecurityAccount string,
-  SecurityId low_cardinality(string),
+  SecurityId string,
   EntrustDirection string,
   LastQty float64,
   LastPx float64,
   Fee float64,
-  StrategyId low_cardinality(string)
+  StrategyId string
 )
 PARTITION BY to_start_of_hour(_tp_time)
 TTL to_datetime(_tp_time) + INTERVAL 4 HOUR
