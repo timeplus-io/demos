@@ -1,7 +1,7 @@
 STORAGE_CLASS=$(shell kubectl get storageclass -o jsonpath='{.items[?(@.metadata.annotations.storageclass\.kubernetes\.io/is-default-class=="true")].metadata.name}')
 NS=timeplus
 RELEASE=timeplus
-VERSION=v10.0.7
+VERSION=11.0.4
 PLATFORM=gcp
 
 .PHONY: logs
@@ -72,4 +72,6 @@ scale_pvc:
 	kubectl patch pvc timeplusd-stream-timeplusd-0 -n timeplus   -p '{"spec":{"resources":{"requests":{"storage":"400Gi"}}}}'
 	kubectl patch pvc timeplusd-stream-timeplusd-1 -n timeplus   -p '{"spec":{"resources":{"requests":{"storage":"400Gi"}}}}'
 	kubectl patch pvc timeplusd-stream-timeplusd-2 -n timeplus   -p '{"spec":{"resources":{"requests":{"storage":"400Gi"}}}}'
-		 
+	
+patch_config:	
+	kubectl patch statefulset timeplusd -n timeplus --patch-file patch_config.yaml
