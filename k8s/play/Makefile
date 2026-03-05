@@ -57,4 +57,6 @@ forward-timeplusd:
 sync:
 	./timeplus sync apply ./scripts
 
-		 
+
+patch_config:
+	kubectl patch statefulset timeplusd -n $(NS) --patch-file patch_config.yaml
