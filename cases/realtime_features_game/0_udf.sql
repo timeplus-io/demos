@@ -1,3 +1,6 @@
+
+SYSTEM INSTALL PYTHON PACKAGE 'faker';
+
 CREATE OR REPLACE FUNCTION generate(data string, seed uint32) RETURNS string LANGUAGE PYTHON AS 
 $$
 from faker import Faker
