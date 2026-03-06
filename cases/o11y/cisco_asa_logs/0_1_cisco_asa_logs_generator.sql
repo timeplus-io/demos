@@ -541,15 +541,25 @@ CREATE RANDOM STREAM cisco_asa_simulator.cisco_asa_logs (
 ) SETTINGS eps = 100;
 
 
-CREATE EXTERNAL STREAM IF NOT EXISTS cisco_observability.asa_logs_stream (
+CREATE EXTERNAL STREAM IF NOT EXISTS cisco_asa_simulator.asa_logs_stream (
     message string
 )
-SETTINGS type = 'kafka', brokers = '10.138.0.23:9092', topic = 'cisco_asa_logs', data_format='JSONEachRow', one_message_per_row=true;
+SETTINGS 
+    type = 'kafka', 
+    brokers = 'bootstrap.demo.us-west1.managedkafka.tpdemo2025.cloud.goog:9092', 
+    topic = 'cisco_asa_logs', 
+    security_protocol='SASL_SSL',
+    sasl_mechanism='PLAIN',
+    config_file='etc/kafka-config/client.properties',
+    skip_ssl_cert_check = false,
+    data_format='JSONEachRow', 
+    one_message_per_row=true;
 
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS cisco_asa_simulator.mv_asa_logs
-INTO cisco_observability.asa_logs_stream
+INTO cisco_asa_simulator.asa_logs_stream
 AS
 SELECT
     log_message AS message
 FROM cisco_asa_simulator.cisco_asa_logs;
+
