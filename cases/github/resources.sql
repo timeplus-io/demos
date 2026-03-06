@@ -1,39 +1,68 @@
 
 CREATE DATABASE IF NOT EXISTS github;
 
-CREATE STREAM github.github_events
-(
-  `actor` string,
-  `created_at` string,
-  `id` string,
-  `payload` string,
-  `repo` string,
-  `type` string
+SYSTEM INSTALL PYTHON PACKAGE `PyGithub`;
+
+CREATE EXTERNAL STREAM github.github_events_stream(
+    id string,
+    created_at string,
+    actor string,
+    type string,
+    repo string,
+    payload string
 )
-ENGINE = ExternalStream
-SETTINGS type = 'kafka', 
-    brokers = '10.138.0.23:9092', 
-    topic = 'github_events', 
-    data_format = 'JSONEachRow', 
-    one_message_per_row = true
-COMMENT ' ';
+AS $$
+import os
+import time
+from github import Github, GithubException
+
+# Initialize outside the function to maintain state across calls if needed
+token = os.environ.get("GITHUB_TOKEN")
+g = Github(token, per_page=100) if token else None
+known_ids = set()
+
+def read_github():
+    global g, known_ids
+    if g is None:
+        return
+
+    while True:
+        try:
+            events = g.get_events()
+            for e in events:
+                if e.id not in known_ids:
+                    known_ids.add(e.id)
+                    # Yield a list where each element corresponds to a column
+                    yield (
+                        str(e.id),
+                        e.created_at.isoformat(),
+                        str(e.actor.login),
+                        str(e.type),
+                        str(e.repo.name),
+                        str(e.payload)
+                    )
+            
+            # Maintenance: Clear cache every 5000 IDs to manage memory
+            if len(known_ids) > 5000:
+                known_ids.clear()
+                
+            time.sleep(2)
+            
+        except GithubException:
+            time.sleep(600) # API rate limit or error backoff
+        except Exception:
+            time.sleep(10)
+$$
+SETTINGS 
+    type = 'python',
+    read_function_name = 'read_github';
+
 
 CREATE MATERIALIZED VIEW github.mv_github_events
-(
-  `_tp_time` datetime64(3, 'UTC'),
-  `actor` string,
-  `created_at` datetime,
-  `id` string,
-  `payload` string,
-  `repo` string,
-  `type` string,
-  `_tp_sn` int64
-) AS
+AS
 SELECT
-  _tp_time, actor, cast(created_at, 'datetime') AS created_at, id, payload, repo, type
+  id, to_time(created_at) AS created_at, actor, type, repo, payload
 FROM
-  github.github_events
-SETTINGS
-  seek_to = '231000000,70000000,70000000'
+  github.github_events_stream
 STORAGE_SETTINGS index_granularity = 8192
 TTL to_datetime(_tp_time) + 7d
