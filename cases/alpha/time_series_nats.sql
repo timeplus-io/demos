@@ -95,6 +95,8 @@ PARTITION BY symbol;
 
 -- Alpha 10: Bollinger Band Position
 -- Calculate position within Bollinger Bands
+-- Bollinger Bands is a technical analysis indicator invented by John Bollinger in the 1980s. 
+-- It measures price volatility and identifies overbought/oversold conditions.
 CREATE OR REPLACE VIEW alpha.v_bollinger_position AS
 SELECT 
     symbol,
