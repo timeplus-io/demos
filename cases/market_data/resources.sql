@@ -1,7 +1,60 @@
 CREATE DATABASE IF NOT EXISTS market_data;
 
+-- python table function to read from coinbase websocket feed
+SYSTEM INSTALL PYTHON PACKAGE 'json5>=0.9.6';
+SYSTEM INSTALL PYTHON PACKAGE 'websocket-client>=1.4.0';
+
+CREATE EXTERNAL STREAM market_data.coinbase_websocket_read_connector(type string, product_id string, channel string, full_payload string, received_at datetime64(3))
+AS $$
+import websocket
+import json5
+import time
+from datetime import datetime
+
+def read_coinbase_websocket_stream():
+    websocket_url = "wss://ws-feed.exchange.coinbase.com"
+    subscription_message = '{"type": "subscribe", "product_ids": ["BTC-USD"], "channels": ["ticker"]}'
+
+    ws = None
+    while True:
+        try:
+            ws = websocket.create_connection(websocket_url)
+            ws.send(subscription_message)
+
+            while True:
+                message = ws.recv() or ""
+                parsed_message = json5.loads(message) or {}
+
+                msg_type = parsed_message.get("type") or ""
+                product_id = parsed_message.get("product_id") or ""
+
+                channel_name = ""
+                channels = parsed_message.get("channels")
+                if msg_type == "subscriptions" and channels:
+                    channel_name = ", ".join([c.get("name", "unknown") for c in channels]) or ""
+                elif "channel" in parsed_message:
+                    channel_name = parsed_message.get("channel") or ""
+
+                yield (
+                    msg_type,
+                    product_id,
+                    channel_name,
+                    message,
+                    datetime.utcnow(),
+                )
+
+        except Exception:
+            time.sleep(5)
+        finally:
+            if ws:
+                ws.close()
+        time.sleep(1)
+
+$$
+SETTINGS type='python', mode='streaming', read_function_name='read_coinbase_websocket_stream';
+
 -- tickers stream created by source
-CREATE STREAM default.coinbase_tickers
+CREATE STREAM market_data.coinbase_tickers
 (
   `best_ask` float64,
   `product_id` string,
@@ -19,66 +72,35 @@ CREATE STREAM default.coinbase_tickers
   `type` string,
   `volume_24h` float64,
   `best_ask_size` float64,
-  `best_bid_size` float64,
-  `_tp_time` datetime64(3, 'UTC') DEFAULT now64(3, 'UTC') CODEC(DoubleDelta, ZSTD(1)),
-  `_tp_sn` int64 CODEC(Delta(8), ZSTD(1)),
-  INDEX _tp_time_index _tp_time TYPE minmax GRANULARITY 32,
-  INDEX _tp_sn_index _tp_sn TYPE minmax GRANULARITY 32
+  `best_bid_size` float64
 )
-ENGINE = Stream(1, 3, rand())
-PARTITION BY to_YYYYMM(_tp_time)
-ORDER BY to_start_of_hour(_tp_time)
-TTL to_datetime(_tp_time) + INTERVAL 1 DAY
-SETTINGS mode = 'append', logstore_retention_bytes = '-1', logstore_retention_ms = '86400000', index_granularity = 8192
-COMMENT ' '
+TTL to_datetime(_tp_time) + INTERVAL 24 HOUR
+SETTINGS logstore_retention_bytes = '107374182', logstore_retention_ms = '300000';
 
-CREATE MUTABLE STREAM market_data.coinbase_ohlc_1m_vkv
-(
-  `time` datetime64(3),
-  `symbol` string,
-  `open` float32,
-  `close` float32,
-  `high` float32,
-  `low` float32,
-  `_tp_time` datetime64(3, 'UTC') DEFAULT now64(3, 'UTC')
-)
-PRIMARY KEY (time, symbol);
-
--- views
-CREATE VIEW market_data.bitcoin_usd
-AS
-SELECT
-  *
-FROM
-  default.coinbase_tickers
-WHERE
-  product_id = 'BTC-USD';
-
--- MV
 CREATE MATERIALIZED VIEW market_data.mv_coinbase_tickers_extracted
+INTO market_data.coinbase_tickers
 AS
-SELECT
-  cast(raw:best_ask, 'float') AS best_ask, 
-  cast(raw:best_ask_size, 'float') AS best_ask_size, 
-  cast(raw:best_bid, 'float') AS best_bid, 
-  cast(raw:best_bid_size, 'float') AS best_bid_size, 
-  cast(raw:high_24h, 'float') AS high_24h, 
-  cast(raw:last_size, 'float') AS last_size, 
-  cast(raw:low_24h, 'float') AS low_24h, 
-  cast(raw:open_24h, 'float') AS open_24h, 
-  cast(raw:price, 'float') AS price, 
-  cast(raw:sequence, 'bigint') AS sequence, raw:side AS side, 
-  cast(raw:trade_id, 'bigint') AS trade_id, raw:type AS type, 
-  cast(raw:volume_24h, 'float') AS volume_24h, 
-  cast(raw:volume_30d, 'float') AS volume_30d, 
-  raw:product_id AS product_id, 
-  to_time(raw:time) AS _tp_time
-FROM
-  market_data.coinbase_tickers
-WHERE
-  _tp_time > earliest_timestamp()
-STORAGE_SETTINGS index_granularity = 8192, logstore_retention_bytes = -1, logstore_retention_ms = 86400000
-TTL to_datetime(_tp_time) + INTERVAL 30 DAY;
+SELECT 
+  full_payload:best_ask::float as best_ask,
+  full_payload:product_id as product_id,
+  full_payload:price::float as price,
+  full_payload:trade_id::float as trade_id,
+  full_payload:best_bid::float as best_bid,
+  full_payload:open_24h::float as open_24h,
+  full_payload:sequence::float as sequence,
+  full_payload:volume_30d::float as volume_30d,
+  full_payload:high_24h::float as high_24h,
+  full_payload:low_24h::float as low_24h,
+  full_payload:last_size::float as last_size,
+  full_payload:side as side,
+  full_payload:time as time,
+  full_payload:type as type,
+  full_payload:volume_24h::float as volume_24h,
+  full_payload:best_ask_size::float as best_ask_size,
+  full_payload:best_bid_size::float as best_bid_size,
+  to_time(time) as _tp_time
+FROM market_data.coinbase_websocket_read_connector
+WHERE full_payload:type = 'ticker'
 
 
 CREATE VIEW market_data.v_coinbase_btc_ohlc_1m
@@ -86,7 +108,7 @@ AS
 SELECT
   window_start, earliest(price) AS open, latest(price) AS close, max(price) AS high, min(price) AS low
 FROM
-  tumble(coinbase_tickers, 1m)
+  tumble(market_data.coinbase_tickers, 1m)
 WHERE
   (product_id = 'BTC-USD') AND (_tp_time > (now() - 1h))
 GROUP BY
@@ -112,6 +134,17 @@ SELECT
 FROM
   market_data.v_coinbase_btc_1m_ret;
 
+CREATE MUTABLE STREAM market_data.coinbase_ohlc_1m_vkv
+(
+  `time` datetime64(3),
+  `symbol` string,
+  `open` float32,
+  `close` float32,
+  `high` float32,
+  `low` float32,
+  `_tp_time` datetime64(3, 'UTC') DEFAULT now64(3, 'UTC')
+)
+PRIMARY KEY (time, symbol);
 
 CREATE MATERIALIZED VIEW market_data.mv_ohlc_by_symbol INTO market_data.coinbase_ohlc_1m_vkv
 AS
@@ -123,7 +156,7 @@ SELECT
   max(price) AS high, 
   min(price) AS low
 FROM
-  tumble(coinbase_tickers, 1m)
+  tumble(market_data.coinbase_tickers, 1m)
 WHERE
   _tp_time > (now() - 1h)
 GROUP BY
