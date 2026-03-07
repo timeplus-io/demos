@@ -57,12 +57,22 @@ SETTINGS
     type = 'python',
     read_function_name = 'read_github';
 
+CREATE STREAM github.github_events
+(
+  `id` string,
+  `created_at` string,
+  `actor` string,
+  `type` string,
+  `repo` string,
+  `payload` string
+)
+TTL to_datetime(_tp_time) + INTERVAL 7 DAY
+SETTINGS logstore_retention_bytes = '107374182', logstore_retention_ms = '300000';
 
 CREATE MATERIALIZED VIEW github.mv_github_events
+INTO github.github_events
 AS
 SELECT
-  id, to_time(created_at) AS created_at, actor, type, repo, payload
+  id, created_at, actor, type, repo, payload, to_time(created_at) AS _tp_time
 FROM
   github.github_events_stream
-STORAGE_SETTINGS index_granularity = 8192
-TTL to_datetime(_tp_time) + 7d
