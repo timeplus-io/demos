@@ -4,7 +4,16 @@ CREATE DATABASE IF NOT EXISTS invest_insights;
 CREATE EXTERNAL STREAM IF NOT EXISTS invest_insights.position_ext (
     raw string
 )
-SETTINGS type = 'kafka', brokers = '10.138.0.23:9092', topic = 'invest_insights_position', data_format='RawBLOB', one_message_per_row=true;
+SETTINGS 
+    type = 'kafka', 
+    brokers = 'bootstrap.demo.us-west1.managedkafka.tpdemo2025.cloud.goog:9092',
+    topic = 'invest_insights_position',
+    security_protocol = 'SASL_SSL',
+    sasl_mechanism = 'PLAIN',
+    config_file = 'etc/kafka-config/client.properties',
+    skip_ssl_cert_check = false,
+    data_format = 'RawBLOB',
+    one_message_per_row = true;
 
 CREATE EXTERNAL STREAM IF NOT EXISTS invest_insights.position_w_ext (
   event_ts uint64,
@@ -13,7 +22,17 @@ CREATE EXTERNAL STREAM IF NOT EXISTS invest_insights.position_w_ext (
   SecurityId string,
   HoldingQty float64
 )
-SETTINGS type = 'kafka', brokers = '10.138.0.23:9092', topic = 'invest_insights_position', data_format='JSONEachRow', one_message_per_row=true;
+SETTINGS 
+    type = 'kafka', 
+    brokers = 'bootstrap.demo.us-west1.managedkafka.tpdemo2025.cloud.goog:9092',
+    topic = 'invest_insights_position',
+    security_protocol = 'SASL_SSL',
+    sasl_mechanism = 'PLAIN',
+    config_file = 'etc/kafka-config/client.properties',
+    skip_ssl_cert_check = false,
+    data_format = 'JSONEachRow',
+    one_message_per_row = true;
+
 
 CREATE Mutable STREAM IF NOT EXISTS invest_insights.position (
   event_ts uint64,
@@ -29,7 +48,17 @@ SETTINGS logstore_retention_bytes = 107374182, logstore_retention_ms = 300000;
 CREATE EXTERNAL STREAM IF NOT EXISTS invest_insights.execution_ext (
     raw string
 )
-SETTINGS type = 'kafka', brokers = '10.138.0.23:9092', topic = 'invest_insights_execution';
+SETTINGS 
+    type = 'kafka', 
+    brokers = 'bootstrap.demo.us-west1.managedkafka.tpdemo2025.cloud.goog:9092',
+    topic = 'invest_insights_execution',
+    security_protocol = 'SASL_SSL',
+    sasl_mechanism = 'PLAIN',
+    config_file = 'etc/kafka-config/client.properties',
+    skip_ssl_cert_check = false,
+    data_format = 'RawBLOB',
+    one_message_per_row = true;
+
 
 CREATE EXTERNAL STREAM IF NOT EXISTS invest_insights.execution_w_ext (
   event_ts uint64,
@@ -43,7 +72,16 @@ CREATE EXTERNAL STREAM IF NOT EXISTS invest_insights.execution_w_ext (
   Fee float64,
   StrategyId string
 )
-SETTINGS type = 'kafka', brokers = '10.138.0.23:9092', topic = 'invest_insights_execution', data_format='JSONEachRow', one_message_per_row=true;
+SETTINGS 
+    type = 'kafka', 
+    brokers = 'bootstrap.demo.us-west1.managedkafka.tpdemo2025.cloud.goog:9092',
+    topic = 'invest_insights_execution',
+    security_protocol = 'SASL_SSL',
+    sasl_mechanism = 'PLAIN',
+    config_file = 'etc/kafka-config/client.properties',
+    skip_ssl_cert_check = false,
+    data_format = 'JSONEachRow',
+    one_message_per_row = true;
 
 CREATE STREAM IF NOT EXISTS invest_insights.execution (
   event_ts uint64,
@@ -65,7 +103,16 @@ SETTINGS index_granularity = 8192, logstore_retention_bytes = '107374182', logst
 CREATE EXTERNAL STREAM IF NOT EXISTS invest_insights.exchange_order_ext (
     raw string
 )
-SETTINGS type = 'kafka', brokers = '10.138.0.23:9092', topic = 'invest_insights_exchange_order';
+SETTINGS 
+    type = 'kafka', 
+    brokers = 'bootstrap.demo.us-west1.managedkafka.tpdemo2025.cloud.goog:9092',
+    topic = 'invest_insights_exchange_order',
+    security_protocol = 'SASL_SSL',
+    sasl_mechanism = 'PLAIN',
+    config_file = 'etc/kafka-config/client.properties',
+    skip_ssl_cert_check = false,
+    data_format = 'RawBLOB',
+    one_message_per_row = true;
 
 CREATE EXTERNAL STREAM IF NOT EXISTS invest_insights.exchange_order_w_ext (
     event_ts uint64,
@@ -82,7 +129,16 @@ CREATE EXTERNAL STREAM IF NOT EXISTS invest_insights.exchange_order_w_ext (
     OrdStatus string,
     StrategyId string
 )
-SETTINGS type = 'kafka', brokers = '10.138.0.23:9092', topic = 'invest_insights_exchange_order', data_format='JSONEachRow', one_message_per_row=true;
+SETTINGS 
+    type = 'kafka', 
+    brokers = 'bootstrap.demo.us-west1.managedkafka.tpdemo2025.cloud.goog:9092',
+    topic = 'invest_insights_exchange_order',
+    security_protocol = 'SASL_SSL',
+    sasl_mechanism = 'PLAIN',
+    config_file = 'etc/kafka-config/client.properties',
+    skip_ssl_cert_check = false,
+    data_format = 'JSONEachRow',
+    one_message_per_row = true;
 
 CREATE STREAM IF NOT EXISTS invest_insights.exchange_order (
     event_ts uint64,
