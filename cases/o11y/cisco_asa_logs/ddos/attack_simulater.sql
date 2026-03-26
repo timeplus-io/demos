@@ -233,3 +233,8 @@ FROM
   cisco_observability_ddos.cxt_ddos_stream
 WHERE
   src_ip = '203.0.113.66';
+
+
+-- by default, pause the attack MV, when resume it, should see the alert
+SYSTEM PAUSE MATERIALIZED VIEW cisco_asa_simulator.mv_asa_logs_attack;
+SYSTEM RESUME MATERIALIZED VIEW cisco_asa_simulator.mv_asa_logs_attack;
