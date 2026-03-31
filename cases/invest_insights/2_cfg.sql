@@ -26,5 +26,14 @@ CREATE MUTABLE STREAM if not exists invest_insights.cfg (
 PRIMARY KEY securityId;
 
 
-INSERT INTO invest_insights.cfg
+INSERT INTO invest_insights.cfg 
+(
+    id, securityId, securityExchange, businessType, securityPosition, 
+    minSpread, minReportBalance, avgSingleReportBalance, callAuctionRatio, 
+    continousAuctionRatio, execBalanceRequire, execBalanceRatio, 
+    timeWeightReportPriceDiff, continousAuctionEffectRatio, 
+    lastNoReportPriceTime, canceledReportRatio, canceledNum, 
+    singleExecRatio, execAmountExceedHistoryAvgRatio, 
+    DeviationQuotationRatio, FutureSpotExposure, MarketMaker
+)
 SELECT * FROM invest_insights.generate_cfg_data;
