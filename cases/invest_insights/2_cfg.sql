@@ -24,3 +24,7 @@ CREATE MUTABLE STREAM if not exists invest_insights.cfg (
     MarketMaker string
 )
 PRIMARY KEY securityId;
+
+
+INSERT INTO invest_insights.cfg
+SELECT * FROM invest_insights.generate_cfg_data;
