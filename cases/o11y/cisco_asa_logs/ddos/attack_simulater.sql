@@ -9,7 +9,7 @@ CREATE RANDOM STREAM cisco_asa_simulator.cisco_asa_ddos_normal (
 
     -- Fixed attacker device and IP
     device_name string DEFAULT 'asa-fw01',
-    src_ip string DEFAULT '203.0.113.66',
+    src_ip string DEFAULT '203.0.113.67',
 
     -- Random destination IPs (scanning many targets)
     dst_ip string DEFAULT concat(
@@ -106,7 +106,7 @@ CREATE RANDOM STREAM cisco_asa_simulator.cisco_asa_ddos_attack (
 
     -- Fixed attacker device and IP
     device_name string DEFAULT 'asa-fw01',
-    src_ip string DEFAULT '203.0.113.66',
+    src_ip string DEFAULT '203.0.113.67',
 
     -- Random destination IPs (scanning many targets)
     dst_ip string DEFAULT concat(
@@ -232,7 +232,7 @@ SELECT
 FROM
   cisco_observability_ddos.cxt_ddos_stream
 WHERE
-  src_ip = '203.0.113.66';
+  src_ip = '203.0.113.67';
 
 
 -- by default, pause the attack MV, when resume it, should see the alert
