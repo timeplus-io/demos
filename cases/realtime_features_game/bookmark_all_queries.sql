@@ -68,7 +68,7 @@ WHERE _tp_time > earliest_ts()
 GROUP BY user_id, window_start, window_end;
 
 -- accumulative features
--- total first, and lastgame played, 
+-- total first, and lastgame played,
 CREATE STREAM game.user_game_stats_feature
 (
   `user_id` string,
@@ -81,7 +81,7 @@ CREATE MATERIALIZED VIEW game.mv_user_game_stats_feature
 INTO game.user_game_stats_feature
 AS
 SELECT
-  user_id, 
+  user_id,
   count_distinct(match_id) AS total_game_played,
   earliest(match_id) AS first_game_played,
   latest(match_id) AS last_game_played
@@ -91,6 +91,7 @@ WHERE
   event_type = 'match_start' and _tp_time > earliest_ts()
 GROUP BY
   user_id
+EMIT ON UPDATE WITH BATCH 2s
 settings seek_to = 'earliest';
 
 -- Performance by Game Mode
@@ -117,6 +118,7 @@ JOIN game.performance_metrics pm
  AND pa.session_id = pm.session_id
  AND date_diff_within(2m) -- add time difference condition to join
 GROUP BY pa.user_id, pa.game_mode
+EMIT ON UPDATE WITH BATCH 2s
 settings seek_to = 'earliest';
 
 ----------------------------------------------------------------------------------------
@@ -132,11 +134,12 @@ CREATE STREAM game.total_spend_last_10_transaction
 CREATE MATERIALIZED VIEW game.mv_total_spend_last_10_transaction
 INTO game.total_spend_last_10_transaction
 AS
-select 
-    user_id, 
+select
+    user_id,
     array_sum(x->x, group_array_last (amount_usd, 10)) as total_spend
 from game.transactions
-group by user_id;
+group by user_id
+EMIT ON UPDATE WITH BATCH 2s;
 
 ----------------------------------------------------------------------------------------
 

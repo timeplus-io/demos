@@ -1,4 +1,4 @@
--- total first, and lastgame played, 
+-- total first, and lastgame played,
 CREATE STREAM game.user_game_stats_feature
 (
   `user_id` string,
@@ -9,11 +9,14 @@ CREATE STREAM game.user_game_stats_feature
 TTL to_datetime(_tp_time) + INTERVAL 24 HOUR
 SETTINGS logstore_retention_bytes = '107374182', logstore_retention_ms = '300000';
 
+-- EMIT ON UPDATE WITH BATCH 2s: emit only the groups that changed in the last
+-- 2s window, instead of the default EMIT PERIODIC 2s which re-emits every
+-- group every period (memory- and write-amplification heavy at scale).
 CREATE MATERIALIZED VIEW game.mv_user_game_stats_feature
 INTO game.user_game_stats_feature
 AS
 SELECT
-  user_id, 
+  user_id,
   count_distinct(match_id) AS total_game_played,
   earliest(match_id) AS first_game_played,
   latest(match_id) AS last_game_played
@@ -23,6 +26,7 @@ WHERE
   event_type = 'match_start' and _tp_time > earliest_ts()
 GROUP BY
   user_id
+EMIT ON UPDATE WITH BATCH 2s
 settings seek_to = 'earliest';
 
 -- Performance by Game Mode
@@ -51,6 +55,7 @@ JOIN game.performance_metrics pm
  AND pa.session_id = pm.session_id
  AND date_diff_within(2m) -- add time difference condition to join
 GROUP BY pa.user_id, pa.game_mode
+EMIT ON UPDATE WITH BATCH 2s
 settings seek_to = 'earliest';
 
 ----------------------------------------------------------------------------------------
@@ -64,6 +69,7 @@ SELECT
 FROM game.player_actions
 WHERE _tp_time > earliest_ts()
 GROUP BY user_id
+EMIT ON UPDATE WITH BATCH 2s
 settings seek_to = 'earliest';
 
 
@@ -79,6 +85,7 @@ JOIN game.performance_metrics pm
  AND pa.session_id = pm.session_id
  AND date_diff_within(2m)
 GROUP BY pa.user_id
+EMIT ON UPDATE WITH BATCH 2s
 settings seek_to = 'earliest';
 
 -- “Does network latency spike when the user eliminates or gets eliminated?”
@@ -96,5 +103,6 @@ ON (pa.user_id = pm.user_id)
   AND date_diff_within(2m)
 GROUP BY
   pa.user_id
+EMIT ON UPDATE WITH BATCH 2s
 SETTINGS
   seek_to = 'earliest';
