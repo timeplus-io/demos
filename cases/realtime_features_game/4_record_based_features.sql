@@ -8,14 +8,17 @@ CREATE STREAM game.total_spend_last_10_transaction
 TTL to_datetime(_tp_time) + INTERVAL 24 HOUR
 SETTINGS logstore_retention_bytes = '107374182', logstore_retention_ms = '300000';
 
+-- EMIT ON UPDATE WITH BATCH 2s emits only changed groups every 2s, instead of
+-- the default EMIT PERIODIC 2s which re-emits every group every period.
 CREATE MATERIALIZED VIEW game.mv_total_spend_last_10_transaction
 INTO game.total_spend_last_10_transaction
 AS
-select 
-    user_id, 
+select
+    user_id,
     array_sum(x->x, group_array_last (amount_usd, 10)) as total_spend
 from game.transactions
 group by user_id
+EMIT ON UPDATE WITH BATCH 2s;
 
 ----------------------------------------------------------------------------------------
 
@@ -26,7 +29,8 @@ select
     array_sum(x->x, group_array_last (event_data:survival_time::int, 7)) as total_survival_time_in_last_7_games
 from game.player_actions
 where event_type = 'match_end'
-group by user_id;
+group by user_id
+EMIT ON UPDATE WITH BATCH 2s;
 
 
 -- feature 5 lost in a row last 5 games
@@ -43,3 +47,4 @@ select
 from game.player_actions
 where event_type = 'match_end'
 group by user_id
+EMIT ON UPDATE WITH BATCH 2s;
