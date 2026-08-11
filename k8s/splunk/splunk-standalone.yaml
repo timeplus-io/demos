@@ -12,13 +12,15 @@ spec:
       memory: "8Gi"
       cpu: "4"
   etcVolumeStorageConfig:
-    storageClassName: standard-rwo
+    storageClassName: timeplus-storage-class
     storageCapacity: 10Gi
   varVolumeStorageConfig:
-    storageClassName: standard-rwo
+    storageClassName: timeplus-storage-class
     storageCapacity: 100Gi
-  # Environment variables go directly under spec
-  env:
+  extraEnv:
+    # accept the Splunk General Terms (required by Splunk Enterprise 9.4+ images)
+    - name: SPLUNK_GENERAL_TERMS
+      value: "--accept-sgt-current-at-splunk-com"
     - name: SPLUNK_HEC_PORT
       value: "8088"
     - name: SPLUNK_PASSWORD
