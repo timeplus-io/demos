@@ -29,6 +29,13 @@ apply:
 	kubectl apply -f splunk-standalone.yaml
 	kubectl apply -f hec_service.yaml
 
+forward:
+	kubectl port-forward svc/splunk-single-standalone-service 8000:8000 -n $(NAMESPACE)
+
+expose:
+	kubectl apply -f web_service.yaml
+	kubectl get svc splunk-web -n $(NAMESPACE)
+
 status:
 	kubectl get standalone,pods,svc -n $(NAMESPACE)
 
@@ -36,6 +43,7 @@ show_password:
 	kubectl get secret splunk-single-standalone-secret-v1 -n $(NAMESPACE) -o jsonpath='{.data.password}' | base64 --decode
 
 uninstall:
+	kubectl delete -f web_service.yaml --ignore-not-found
 	kubectl delete -f hec_service.yaml --ignore-not-found
 	kubectl delete -f splunk-standalone.yaml --ignore-not-found
 	helm uninstall splunk-operator -n $(NAMESPACE)
