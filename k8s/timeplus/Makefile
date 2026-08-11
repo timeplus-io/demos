@@ -73,5 +73,12 @@ scale_pvc:
 	kubectl patch pvc timeplusd-stream-timeplusd-1 -n timeplus   -p '{"spec":{"resources":{"requests":{"storage":"400Gi"}}}}'
 	kubectl patch pvc timeplusd-stream-timeplusd-2 -n timeplus   -p '{"spec":{"resources":{"requests":{"storage":"400Gi"}}}}'
 	
-patch_config:	
+patch_config:
 	kubectl patch statefulset timeplusd -n timeplus --patch-file patch_config.yaml
+
+# expose the Splunk S2S input port on timeplusd-svc; the helm chart doesn't
+# include it, so re-run this after every `make upgrade` (a repeat run fails
+# harmlessly with a duplicate-port error)
+expose_s2s:
+	kubectl patch svc timeplusd-svc -n $(NS) --type='json' \
+		-p='[{"op":"add","path":"/spec/ports/-","value":{"name":"s2s","port":9997,"targetPort":9997,"protocol":"TCP"}}]'
